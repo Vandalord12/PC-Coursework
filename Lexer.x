@@ -51,3 +51,42 @@ tokens :-
   "NOT"            { \p s -> TokenNot p }
   "IN"             { \p s -> TokenIn p }
   "LIKE"           { \p s -> TokenLike p }
+
+
+{
+data Token =
+  TokenSelect   |
+  TokenFrom     |
+  TokenWhere   |
+  TokenOrder   |
+  TokenBy   |
+  TokenAsc   |
+  TokenDesc   |
+  TokenGroup   |
+  TokenHaving  |
+  TokenLimit    |
+  TokenOffset  |
+  TokenDistinct   |
+    -- This chunck is responsible about Insert, Delete, Update
+  TokenInsert   |
+  TokenInto  |
+  TokenValues   |
+  TokenUpdate   |
+  TokenSet    |
+  TokenDelete   |
+    -- Joins 
+  TokenJoin   |
+  TokenInner      |
+  TokenLeft    |
+  TokenRight     |
+  TokenFull    |
+  TokenOuter     |
+  TokenOn    |
+    -- Logical Operators
+  TokenAnd    |
+  TokenOr     |
+  TokenNot    |
+   TokenIn    |
+  TokenLike   deriving(Eq,Show)
+
+}
