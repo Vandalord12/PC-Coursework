@@ -50,3 +50,28 @@ tokens :-
   "NOT"            { \p s -> TokenNot p }
   "IN"             { \p s -> TokenIn p }
   "LIKE"           { \p s -> TokenLike p }
+
+
+
+   
+    -- Conditional Expressions
+  "CASE"           { \p s -> TokenCase p }
+  "WHEN"           { \p s -> TokenWhen p }
+  "THEN"           { \p s -> TokenThen p }
+  "ELSE"           { \p s -> TokenElse p }
+  "END"            { \p s -> TokenEnd p }
+
+-- Essential arthimitic Operators
+"+"              { \p s -> TokenPlus p }
+"-"              { \p s -> TokenMinus p }
+"*"              { \p s -> TokenMultiply p }
+"/"              { \p s -> TokenDivide p }
+"%"              { \p s -> TokenModulo p }
+
+-- Comparison Operators
+"="              { \p s -> TokenEquals p }
+"!="             { \p s -> TokenNotEquals p }
+"<"              { \p s -> TokenLessThan p }
+">"              { \p s -> TokenGreaterThan p }
+"<="             { \p s -> TokenLessThanEq p }
+">="             { \p s -> TokenGreaterThanEq p }
