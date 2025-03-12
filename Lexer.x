@@ -17,7 +17,7 @@ tokens :-
   $white+            ; 
   "--".*             ;   
   -- SQL Keywords
-   SELECT           { \p s -> TokenSelect p }
+   SELECT           { \p s -> PT p TokenSelect p }
    FROM             { \p s -> TokenFrom p }
    WHERE            { \p s -> TokenWhere p }
    ORDER            { \p s -> TokenOrder p }
@@ -83,46 +83,82 @@ tokens :-
   "{"           { \p s -> TokenLBrace p }
   "}"           { \p s -> TokenRBrace p }
   -- ===== Pattern Matching =====
+  -- A number
   $digit+(\.$digit+)? { \p s -> TokenNumber p (read s) }
+  -- A file name
   [$alpha _][$alpha _ $digit]*"."[$alpha _ $digit]+ { \p s -> TokenFilename p s }
   \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
   $ident { \p s -> TokenIdentifier p s }
 
 {
 data Token =
-  TokenSelect     |
-  TokenFrom       |
-  TokenWhere      |
-  TokenOrder      |
-  TokenBy         |
-  TokenAsc        |
-  TokenDesc       |
-  TokenGroup      |
-  TokenHaving     |
-  TokenLimit      |
-  TokenOffset     |
-  TokenDistinct   |
+  TokenSelect AlexPosn   |
+  TokenFrom AlexPosn      |
+  TokenWhere AlexPosn     |
+  TokenOrder AlexPosn     |
+  TokenBy AlexPosn        |
+  TokenAsc AlexPosn       |
+  TokenDesc AlexPosn      |
+  TokenGroup AlexPosn     |
+  TokenHaving AlexPosn    |
+  TokenLimit AlexPosn     |
+  TokenOffset AlexPosn    |
+  TokenDistinct AlexPosn  |
     -- This chunck is responsible about Insert, Delete, Update
-  TokenInsert    |
-  TokenInto      |
-  TokenValues    |
-  TokenUpdate    |
-  TokenSet       |
-  TokenDelete    |
+  TokenInsert AlexPosn   |
+  TokenInto AlexPosn     |
+  TokenValues AlexPosn   |
+  TokenUpdate AlexPosn   |
+  TokenSet AlexPosn      |
+  TokenDelete AlexPosn   |
     -- Joins 
-  TokenJoin      |
-  TokenInner     |
-  TokenLeft      |
-  TokenRight     |
-  TokenFull      |
-  TokenOuter     |
-  TokenOn        |
+  TokenJoin AlexPosn     |
+  TokenInner AlexPosn    |
+  TokenLeft AlexPosn     |
+  TokenRight AlexPosn    |
+  TokenFull AlexPosn     |
+  TokenOuter AlexPosn    |
+  TokenOn AlexPosn       |
     -- Logical Operators
-  TokenAnd       |
-  TokenOr        |
-  TokenNot       |
-  TokenIn        |
-  TokenLike      deriving(Eq,Show)
+  TokenAnd AlexPosn      |
+  TokenOr AlexPosn       |
+  TokenNot AlexPosn      |
+  TokenIn AlexPosn       |
+  TokenLike AlexPosn 
+  
+     -- Conditional Expressions
+  TokenCase AlexPosn     |
+  TokenWhen AlexPosn     |
+  TokenThen AlexPosn     |
+  TokenElse AlexPosn     |
+  TokenEnd AlexPosn      |
+   -- Essential arthimitic Operators
+  TokenPlus AlexPosn     |
+  TokenMinus AlexPosn    |
+  TokenMultiply AlexPosn |
+  TokenDivide AlexPosn   |
+  TokenModulo AlexPosn   |
+  -- Comparison Operators
+  TokenEquals AlexPosn   |
+  TokenNotEquals AlexPosn|
+  TokenLessThan AlexPosn |
+  TokenGreaterThan AlexPosn |
+  TokenLessThanEq AlexPosn |
+  TokenGreaterThanEq AlexPosn |
+  --Parenthesis 
+  TokenLParen AlexPosn |
+  TokenRParen AlexPosn |
+  TokenLBracket AlexPosn |
+  TokenRBracket AlexPosn |
+  TokenLBrace AlexPosn |
+  TokenRBrace  AlexPosn |
+  TokenNumber AlexPosn Num |
+  TokenFilename AlexPosn String |
+  
+  -- What are the types for these two ???
+  TokenString AlexPosn |
+  TokenIdentifier AlexPosn
+  deriving(Eq,Show)
 }
 
    
