@@ -17,7 +17,7 @@ tokens :-
   $white+            ; 
   "--".*             ;   
   -- SQL Keywords
-   SELECT           { \p s -> PT p TokenSelect p }
+   SELECT           { \p s -> TokenSelect p }
    FROM             { \p s -> TokenFrom p }
    WHERE            { \p s -> TokenWhere p }
    ORDER            { \p s -> TokenOrder p }
@@ -159,6 +159,84 @@ data Token =
   TokenString AlexPosn |
   TokenIdentifier AlexPosn
   deriving(Eq,Show)
+
+
+
+
+  tokenPosn :: Token -> String
+  tokenPosn (TokenSelect (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenFrom (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenWhere (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenOrder (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenBy (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenAsc (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenDesc (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenGroup (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenHaving (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLimit (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenOffset (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenDistinct (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenAll (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenAny (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenBetween (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenUnion (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenIntersect (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenExcept (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Insert/Update/Delete
+  tokenPosn (TokenInsert (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenInto (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenValues (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenUpdate (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenSet (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenDelete (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Joins
+  tokenPosn (TokenJoin (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenInner (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLeft (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenRight (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenFull (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenOuter (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenOn (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Logical Operators
+  tokenPosn (TokenAnd (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenOr (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenNot (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenIn (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLike (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Conditional Expressions
+  tokenPosn (TokenCase (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenWhen (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenThen (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenElse (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenEnd (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Arithmetic Operators
+  tokenPosn (TokenPlus (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenMinus (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenMultiply (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenDivide (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenModulo (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Comparison Operators
+  tokenPosn (TokenEquals (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenNotEquals (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLessThan (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenGreaterThan (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLessThanEq (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenGreaterThanEq (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+  -- Parenthesis/Brackets/Braces
+  tokenPosn (TokenLParen (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenRParen (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLBracket (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenRBracket (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenLBrace (AlexPn _ l c)) = show l ++ ":" ++ show c
+  tokenPosn (TokenRBrace (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 }
 
    
