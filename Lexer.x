@@ -160,9 +160,6 @@ data Token =
   TokenIdentifier AlexPosn
   deriving(Eq,Show)
 
-
-
-
   tokenPosn :: Token -> String
   tokenPosn (TokenSelect (AlexPn _ l c)) = show l ++ ":" ++ show c
   tokenPosn (TokenFrom (AlexPn _ l c)) = show l ++ ":" ++ show c
