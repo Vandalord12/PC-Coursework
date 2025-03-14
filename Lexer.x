@@ -87,7 +87,9 @@ tokens :-
   $digit+(\.$digit+)? { \p s -> TokenNumber p (read s) }
   -- A file name
   [$alpha _][$alpha _ $digit]*"."[$alpha _ $digit]+ { \p s -> TokenFilename p s }
+  -- A string
   \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
+  -- An identifier
   $ident { \p s -> TokenIdentifier p s }
 
 {
@@ -156,8 +158,8 @@ data Token =
   TokenFilename AlexPosn String |
   
   -- What are the types for these two ???
-  TokenString AlexPosn |
-  TokenIdentifier AlexPosn
+  TokenString AlexPosn String |
+  TokenIdentifier AlexPosn String
   deriving(Eq,Show)
 
   tokenPosn :: Token -> String
