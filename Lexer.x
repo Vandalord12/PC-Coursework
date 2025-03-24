@@ -46,6 +46,7 @@ tokens :-
   RIGHT           { \p s -> TokenRight p }
   FULL            { \p s -> TokenFull p }
   OUTER           { \p s -> TokenOuter p }
+  CROSS           { \p s -> TokenCrossJoin p }
   ON              { \p s -> TokenOn p }
   -- Logical Operators
   AND            { \p s -> TokenAnd p }
@@ -122,6 +123,7 @@ data TokenM =
   TokenRight AlexPosn     |
   TokenFull AlexPosn      |
   TokenOuter AlexPosn     |
+  TokenCrossJoin AlexPosn    |
   TokenOn AlexPosn        |
   TokenAnd AlexPosn       |
   TokenOr AlexPosn        |
@@ -190,6 +192,7 @@ tokenPosn (TokenLeft (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenRight (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenFull (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOuter (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenCrossJoin (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOn (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Logical Operators

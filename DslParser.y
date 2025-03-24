@@ -39,6 +39,7 @@ LEFT           {TokenLeft _}
 RIGHT          {TokenRight _}
 FULL           {TokenFull _}
 OUTER          {TokenOuter _}
+CROSSJOIN      {TokenCrossJoin _}
 ON             {TokenOn _ }
 AND            {TokenAnd _ }
 OR             {TokenOr _}
@@ -70,4 +71,22 @@ END            {TokenEnd _}
 "]"           {TokenRBracket _}
 "{"           {TokenLBrace _}
 "}"           {TokenRBrace _}
+-------Pattern Matching ------------------
+Int          { TokenNumber _ $$ }
+Filename     { TokenFilename _ $$ }
+String       { TokenString _ $$ }
+Ident        { TokenIdentifier _ $$ }
 
+
+-------------------------- GRAMER ----------------------
+--------------------------------------------------------
+
+-- SELECT statement grammar ----
+SelectStatement : SELECT Columns FROM Table { SelectAction $2 $4 }
+
+-- Grammar for Columns
+Columns : "*" { AllColumns }
+        | ColumnList { ColumnListAction $2 }
+
+-- Grammar for Table
+Table : Ident { TableName $1 }
