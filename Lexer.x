@@ -10,12 +10,11 @@
 %wrapper "posn"
 $digit  = 0-9
 $alpha  = [a-zA-Z]
-$ident  = [$alpha _][$alpha $digit _]*
-
+--$ident  = [$alpha _][$alpha $digit _]*
 
 tokens :-
   $white+            ; 
-  "--".*             ;   
+  "--".*             ; 
   -- SQL Keywords
    SELECT           { \p s -> TokenSelect p }
    FROM             { \p s -> TokenFrom p }
