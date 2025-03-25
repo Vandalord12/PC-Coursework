@@ -6,9 +6,10 @@ import Data.Char (isAlpha, isDigit)
 
 -- this is responsible about the pattern stuff
 %wrapper "posn"
-$digit  = 0-9
-$alpha  = [a-zA-Z]
---$ident  = [$alpha _][$alpha $digit _]*
+$digit=0-9
+$alpha=[a-zA-Z]
+--$ident=[$alpha _][$alpha $digit _]*
+--$ident=[a-zA-Z_][a-zA-Z0-9_]*
 
 tokens :-
   $white+            ; 
@@ -64,6 +65,7 @@ tokens :-
   "+"            { \p s -> TokenPlus p }
   "-"            { \p s -> TokenMinus p }
   "*"            { \p s -> TokenMultiply p }
+  ","            { \p s -> TokenComma p }
   "/"            { \p s -> TokenDivide p }
   "%"            { \p s -> TokenModulo p }
   -- Comparison Operators
@@ -88,7 +90,7 @@ tokens :-
   -- A string
   \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
   -- An identifier
-  -- $ident { \p s -> TokenIdentifier p s }
+  --$ident { \p s -> TokenIdentifier p s }
 
 {
 -- Note: Here's where the Haskell code starts with proper indentation
@@ -138,6 +140,7 @@ data TokenM =
   TokenPlus AlexPosn      |
   TokenMinus AlexPosn     |
   TokenMultiply AlexPosn  |
+  TokenComma    AlexPosn  |
   TokenDivide AlexPosn    |
   TokenModulo AlexPosn    |
   TokenEquals AlexPosn    |
@@ -155,6 +158,7 @@ data TokenM =
   TokenNumber AlexPosn Double | -- Changed from Num to Double
   TokenFilename AlexPosn String |
   TokenString AlexPosn String 
+  --TokenIdentifier AlexPosn String
   deriving (Eq,Show)
 
 tokenPosn :: TokenM -> String
@@ -213,6 +217,7 @@ tokenPosn (TokenEnd (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenPlus (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenMinus (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenMultiply (AlexPn _ l c)) = show l ++ ":" ++ show c
+--tokenPosn (TokenComma (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenDivide (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenModulo (AlexPn _ l c)) = show l ++ ":" ++ show c
 
@@ -236,4 +241,6 @@ tokenPosn (TokenRBrace (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenNumber (AlexPn _ l c) _) = show l ++ ":" ++ show c
 tokenPosn (TokenFilename (AlexPn _ l c) _) = show l ++ ":" ++ show c
 tokenPosn (TokenString (AlexPn _ l c) _) = show l ++ ":" ++ show c
+tokenPosn (TokenIdentifier (AlexPn _ l c) _) = show l ++ ":" ++ show c
+
 }

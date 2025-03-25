@@ -1,6 +1,6 @@
 {
-    module DslParser where
-    import Lexer
+module DslParser where
+import Lexer
 }
 
 %name DslParser 
@@ -55,6 +55,7 @@ END            {TokenEnd _}
 "+"            {TokenPlus _}
 "-"            {TokenMinus _}
 "*"            {TokenMultiply _}
+','            {TokenComma _ }
 "/"            {TokenDivide _}
 "%"            {TokenModulo _}
 -- Comparison Operators ----------------
@@ -78,15 +79,119 @@ String       { TokenString _ $$ }
 Ident        { TokenIdentifier _ $$ }
 
 
+%%
 -------------------------- GRAMER ----------------------
 --------------------------------------------------------
+SelectQuery : SELECT "*" FROM TableList                          { SelectStarColumns $4 }
+            | SELECT ColumnList FROM TableList                   { SelectColumns $2 $4 }
+            | SELECT "*" FROM TableList WHERE ConditionList       { SelectStarColumnsWhere $4 $6 }
+            | SELECT ColumnList FROM TableList WHERE ConditionList { SelectColumnsWhere $2 $4 $6 }
+            | SELECT "*" FROM TableList ORDER BY Ident Direction   { SelectStarColumnsOrder $4 (OrderBy $6 $7) }
+            | SELECT ColumnList FROM TableList ORDER BY Ident Direction { SelectColumnsOrder $2 $4 (OrderBy $6 $7) }
+            | SELECT "*" FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectStarColumnsWhereOrder $4 $6 (OrderBy $8 $9) }
+            | SELECT ColumnList FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectColumnsWhereOrder $2 $4 $6 (OrderBy $8 $9) }
 
--- SELECT statement grammar ----
-SelectStatement : SELECT Columns FROM Table { SelectAction $2 $4 }
 
--- Grammar for Columns
-Columns : "*" { AllColumns }
-        | ColumnList { ColumnListAction $2 }
 
--- Grammar for Table
-Table : Ident { TableName $1 }
+ColumnList :
+    Ident                           { [$1] }
+  | Ident ',' ColumnList            { $1 : $3 }
+
+TableList :
+    Ident                        { [$1] }
+  | Ident ',' TableList          { $1 : $3 }
+
+ConditionList :
+    Condition                       { [$1] }
+  | Condition AND ConditionList     { $1 : $3 }
+
+Condition :
+    Ident "=" Value                 { Equals $1 $3 }
+  | Ident "!=" Value                { NotEq $1 $3 }
+  | Ident "<" Value                 { LessThan $1 $3 }
+  | Ident ">" Value                 { GreaterThan $1 $3 }
+  | Ident "<=" Value                { LessThanEq $1 $3 }
+  | Ident ">=" Value                { GreaterThanEq $1 $3 }
+
+Value :
+    String                         { ValString $1 }
+  | Int                            { ValNumber $1 }
+
+Direction :
+    ASC   { Asc }
+  | DESC  { Desc }
+
+ArithmeticOperations: "+" {Add}
+                    | "-" {Minus}
+                    | "*" {Multiply}
+                    | ',' {Comma}
+                    | "/" {Divide}
+                    | "%" {Modulo}
+
+ComparsionOperators: "=" { Equals}
+                    |"!=" {NotEq}
+                    | "<" {LessThan}
+                    | ">" {GreaterThan}
+                    | "<=" {LessThanEq}
+                    | ">=" {GreaterThanEq}
+                  
+                  
+
+-------------------------- DATA TYPES FOR THE GRAMMER ----------------------
+----------------------------------------------------------------------------
+{
+type ColumnName = String
+type TableName = String
+
+--condition for comparison stuff---
+data Condition
+  = Equals ColumnName Value
+  | NotEq ColumnName Value
+  | LessThan ColumnName Value
+  | GreaterThan ColumnName Value
+  | LessThanEq ColumnName Value
+  | GreaterThanEq ColumnName Value
+  deriving (Show, Eq)
+
+-- types for the value of the comparison---
+data Value
+  = ValString String
+  | ValNumber Double
+  deriving (Show, Eq)
+
+data SelectQuery
+  = SelectStarColumns [TableName]                             
+  | SelectColumns [ColumnName] [TableName]                    
+  | SelectStarColumnsWhere [TableName] [Condition]           
+  | SelectColumnsWhere [ColumnName] [TableName] [Condition]   
+  | SelectStarColumnsOrder [TableName] OrderBy
+  | SelectColumnsOrder [ColumnName] [TableName] OrderBy
+  | SelectStarColumnsWhereOrder [TableName] [Condition] OrderBy
+  | SelectColumnsWhereOrder [ColumnName] [TableName] [Condition] OrderBy
+  deriving (Show, Eq)
+
+data OrderDirection = Asc | Desc
+  deriving (Show, Eq)
+
+data OrderBy = OrderBy ColumnName OrderDirection
+  deriving (Show, Eq)
+
+data Star = Star deriving (Show, Eq)
+
+data ArithmeticOperations = Add 
+                          | Minus
+                          |Multiply
+                          |Comma
+                          |Divide
+                          |Modulo
+                          deriving (Show, Eq)
+
+data ComparsionOperators = Equals
+                         | NotEq
+                         | LessThan
+                         | GreaterThan
+                         | LessThanEq
+                         | GreaterThanEq
+                         deriving (Show, Eq)
+                  
+}
