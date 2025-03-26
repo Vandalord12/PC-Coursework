@@ -1,9 +1,9 @@
 {
-module DslParser where
+module DslParser (parserDsl) where
 import Lexer
 }
 
-%name DslParser 
+%name parserDsl 
 %tokentype { Token } 
 %error { parseError }
 %token
@@ -11,9 +11,9 @@ import Lexer
 -- The tokens are mapped to specific actions in the parser for proper DSL query parsing --
 SELECT         {TokenSelect _}
 FROM           {TokenFrom _}
-WHERE          {TokenWhere }
+WHERE          {TokenWhere _ }
 ORDER          {TokenOrder _}
-BY             {TokenBY _}
+BY             {TokenBy _}
 ASC            {TokenAsc _}
 DESC           {TokenDesc _}
 GROUP          {TokenGroup _}
@@ -79,6 +79,11 @@ String       { TokenString _ $$ }
 Ident        { TokenIdentifier _ $$ }
 
 
+%left OR
+%left AND
+%nonassoc "=" "!=" "<" ">" "<=" ">="
+%left "+" "-"
+%left "*" "/" "%"
 %%
 -------------------------- GRAMER ----------------------
 --------------------------------------------------------
@@ -86,10 +91,10 @@ SelectQuery : SELECT "*" FROM TableList                          { SelectStarCol
             | SELECT ColumnList FROM TableList                   { SelectColumns $2 $4 }
             | SELECT "*" FROM TableList WHERE ConditionList       { SelectStarColumnsWhere $4 $6 }
             | SELECT ColumnList FROM TableList WHERE ConditionList { SelectColumnsWhere $2 $4 $6 }
-            | SELECT "*" FROM TableList ORDER BY Ident Direction   { SelectStarColumnsOrder $4 (OrderBy $6 $7) }
-            | SELECT ColumnList FROM TableList ORDER BY Ident Direction { SelectColumnsOrder $2 $4 (OrderBy $6 $7) }
-            | SELECT "*" FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectStarColumnsWhereOrder $4 $6 (OrderBy $8 $9) }
-            | SELECT ColumnList FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectColumnsWhereOrder $2 $4 $6 (OrderBy $8 $9) }
+           -- | SELECT "*" FROM TableList ORDER BY Ident Direction   { SelectStarColumnsOrder $4 (OrderBy $6 $7) }
+           -- | SELECT ColumnList FROM TableList ORDER BY Ident Direction { SelectColumnsOrder $2 $4 (OrderBy $6 $7) }
+           -- | SELECT "*" FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectStarColumnsWhereOrder $4 $6 (OrderBy $8 $9) }
+           -- | SELECT ColumnList FROM TableList WHERE ConditionList ORDER BY Ident Direction { SelectColumnsWhereOrder $2 $4 $6 (OrderBy $8 $9) }
 
 
 
@@ -117,9 +122,9 @@ Value :
     String                         { ValString $1 }
   | Int                            { ValNumber $1 }
 
-Direction :
-    ASC   { Asc }
-  | DESC  { Desc }
+--Direction :
+ --   ASC   { Asc }
+  --| DESC  { Desc }
 
 ArithmeticOperations: "+" {Add}
                     | "-" {Minus}
@@ -128,18 +133,23 @@ ArithmeticOperations: "+" {Add}
                     | "/" {Divide}
                     | "%" {Modulo}
 
-ComparsionOperators: "=" { Equals}
-                    |"!=" {NotEq}
-                    | "<" {LessThan}
-                    | ">" {GreaterThan}
-                    | "<=" {LessThanEq}
-                    | ">=" {GreaterThanEq}
+ComparsionOperators: "=" { OpEquals}
+                    |"!=" {OpNotEq}
+                    | "<" {OpLessThan}
+                    | ">" {OpGreaterThan}
+                    | "<=" {OpLessThanEq}
+                    | ">=" {OpGreaterThanEq}
                   
                   
 
 -------------------------- DATA TYPES FOR THE GRAMMER ----------------------
 ----------------------------------------------------------------------------
 {
+
+parseError :: [Token] -> a
+parseError [] = error "Unknown Parse Error" 
+parseError (t:ts) = error ("Parse error at line:column " ++ (tokenPosn t) ++ " : " ++ (show ts))
+
 type ColumnName = String
 type TableName = String
 
@@ -164,17 +174,17 @@ data SelectQuery
   | SelectColumns [ColumnName] [TableName]                    
   | SelectStarColumnsWhere [TableName] [Condition]           
   | SelectColumnsWhere [ColumnName] [TableName] [Condition]   
-  | SelectStarColumnsOrder [TableName] OrderBy
-  | SelectColumnsOrder [ColumnName] [TableName] OrderBy
-  | SelectStarColumnsWhereOrder [TableName] [Condition] OrderBy
-  | SelectColumnsWhereOrder [ColumnName] [TableName] [Condition] OrderBy
+ -- | SelectStarColumnsOrder [TableName] OrderBy --
+ -- | SelectColumnsOrder [ColumnName] [TableName] OrderBy --
+ -- | SelectStarColumnsWhereOrder [TableName] [Condition] OrderBy --
+ -- | SelectColumnsWhereOrder [ColumnName] [TableName] [Condition] OrderBy --
   deriving (Show, Eq)
 
-data OrderDirection = Asc | Desc
-  deriving (Show, Eq)
+-- data OrderDirection = Asc | Desc
+--  deriving (Show, Eq)
 
-data OrderBy = OrderBy ColumnName OrderDirection
-  deriving (Show, Eq)
+-- data OrderBy = OrderBy ColumnName OrderDirection
+ -- deriving (Show, Eq)
 
 data Star = Star deriving (Show, Eq)
 
@@ -186,12 +196,12 @@ data ArithmeticOperations = Add
                           |Modulo
                           deriving (Show, Eq)
 
-data ComparsionOperators = Equals
-                         | NotEq
-                         | LessThan
-                         | GreaterThan
-                         | LessThanEq
-                         | GreaterThanEq
+data ComparsionOperators = OpEquals
+                         | OpNotEq
+                         | OpLessThan
+                         | OpGreaterThan
+                         | OpLessThanEq
+                         | OpGreaterThanEq
                          deriving (Show, Eq)
                   
 }

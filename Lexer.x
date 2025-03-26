@@ -90,11 +90,11 @@ tokens :-
   -- A string
   \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
   -- An identifier
-  --$ident { \p s -> TokenIdentifier p s }
+  [a-zA-Z][a-zA-Z0-9]* { \p s -> TokenIdentifier p s } 
 
 {
 -- Note: Here's where the Haskell code starts with proper indentation
-data TokenM =
+data Token =
   TokenSelect AlexPosn   |
   TokenFrom AlexPosn      |
   TokenWhere AlexPosn     |
@@ -157,11 +157,11 @@ data TokenM =
   TokenRBrace AlexPosn    |
   TokenNumber AlexPosn Double | -- Changed from Num to Double
   TokenFilename AlexPosn String |
-  TokenString AlexPosn String 
-  --TokenIdentifier AlexPosn String
+  TokenString AlexPosn String |
+  TokenIdentifier AlexPosn String
   deriving (Eq,Show)
 
-tokenPosn :: TokenM -> String
+tokenPosn :: Token -> String
 tokenPosn (TokenSelect (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenFrom (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenWhere (AlexPn _ l c)) = show l ++ ":" ++ show c
