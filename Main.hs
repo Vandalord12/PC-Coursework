@@ -2,7 +2,7 @@ import Lexer (alexScanTokens)
 import System.Environment (getArgs)
 import Control.Exception (catch, SomeException)
 import System.IO (readFile)
-import Parser (parseSQL)
+import DslParser (parseSQL)
 
 main :: IO ()
 main = catch main' noParse

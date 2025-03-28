@@ -8,8 +8,6 @@ import Data.Char (isAlpha, isDigit)
 %wrapper "posn"
 $digit=0-9
 $alpha=[a-zA-Z]
---$ident=[$alpha _][$alpha $digit _]*
---$ident=[a-zA-Z_][a-zA-Z0-9_]*
 
 tokens :-
   $white+            ; 
@@ -90,7 +88,7 @@ tokens :-
   -- A string
   \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
   -- An identifier
-  --$ident { \p s -> TokenIdentifier p s }
+  $alpha [$alpha $digit _]* { \p s -> TokenIdentifier p s }
 
 {
 -- Note: Here's where the Haskell code starts with proper indentation
@@ -157,8 +155,8 @@ data TokenM =
   TokenRBrace AlexPosn    |
   TokenNumber AlexPosn Double | -- Changed from Num to Double
   TokenFilename AlexPosn String |
-  TokenString AlexPosn String 
-  --TokenIdentifier AlexPosn String
+  TokenString AlexPosn String |
+  TokenIdentifier AlexPosn String
   deriving (Eq,Show)
 
 tokenPosn :: TokenM -> String
