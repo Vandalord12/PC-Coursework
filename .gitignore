@@ -1,4 +1,7 @@
+# Ignore all .hs files
+*.hs
 *.hi
 *.o
-*.hs
-*!Main.hs
+
+# Except Main.hs
+!Main.hs
