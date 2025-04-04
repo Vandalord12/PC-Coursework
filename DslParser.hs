@@ -33,7 +33,7 @@ import Control.Monad (ap)
 
 -- parser produced by Happy Version 2.1.5
 
-data HappyAbsSyn t5 t6 t7 t8 t9 t10 t11 t12 t13
+data HappyAbsSyn t5 t6 t7 t8 t9 t10 t11 t12 t13 t14 t15 t16 t17 t18 t19 t20
         = HappyTerminal (Token)
         | HappyErrorToken Happy_Prelude.Int
         | HappyAbsSyn5 t5
@@ -45,26 +45,33 @@ data HappyAbsSyn t5 t6 t7 t8 t9 t10 t11 t12 t13
         | HappyAbsSyn11 t11
         | HappyAbsSyn12 t12
         | HappyAbsSyn13 t13
+        | HappyAbsSyn14 t14
+        | HappyAbsSyn15 t15
+        | HappyAbsSyn16 t16
+        | HappyAbsSyn17 t17
+        | HappyAbsSyn18 t18
+        | HappyAbsSyn19 t19
+        | HappyAbsSyn20 t20
 
 {-# NOINLINE happyTokenStrings #-}
-happyTokenStrings = ["SELECT","FROM","WHERE","ORDER","BY","ASC","DESC","GROUP","HAVING","LIMIT","OFFSET","DISTINCT","ALL","ANY","BETWEEN","UNION","INTERSECT","EXCEPT","INSERT","INTO","VALUES","UPDATE","SET","DELETE","JOIN","INNER","LEFT","RIGHT","FULL","OUTER","CROSSJOIN","ON","AND","OR","NOT","IN","LIKE","CASE","WHEN","THEN","ELSE","END","\"+\"","\"-\"","\"*\"","','","\"/\"","\"%\"","\"=\"","\"!=\"","\"<\"","\">\"","\"<=\"","\">=\"","\"(\"","\")\"","\"[\"","\"]\"","\"{\"","\"}\"","Int","Filename","String","Ident","%eof"]
+happyTokenStrings = ["SELECT","FROM","WHERE","ORDER","BY","ASC","DESC","GROUP","HAVING","LIMIT","OFFSET","DISTINCT","ALL","ANY","BETWEEN","UNION","INTERSECT","EXCEPT","INSERT","INTO","VALUES","UPDATE","SET","DELETE","JOIN","INNER","LEFT","RIGHT","FULL","OUTER","CROSS","ON","AND","OR","NOT","IN","LIKE","CASE","WHEN","THEN","ELSE","END","AS","\"+\"","\"-\"","\"*\"","','","\"/\"","\"%\"","\".\"","\"=\"","\"!=\"","\"<\"","\">\"","\"<=\"","\">=\"","\"(\"","\")\"","\"[\"","\"]\"","\"{\"","\"}\"","Number","Integer","FilePath","String","Identifier","%eof"]
 
 happyActOffsets :: HappyAddr
-happyActOffsets = HappyA# "\x11\x00\x00\x00\x17\x00\x00\x00\xdb\xff\xff\xff\xd8\xff\xff\xff\xd3\xff\xff\xff\x18\x00\x00\x00\x19\x00\x00\x00\xee\xff\xff\xff\x1b\x00\x00\x00\xde\xff\xff\xff\xdf\xff\xff\xff\xe0\xff\xff\xff\xe0\xff\xff\xff\x07\x00\x00\x00\xf3\xff\xff\xff\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe2\xff\xff\xff\x1e\x00\x00\x00\xe4\xff\xff\xff\xe5\xff\xff\xff\x21\x00\x00\x00\xe7\xff\xff\xff\x24\x00\x00\x00\x0a\x00\x00\x00\xd0\xff\xff\xff\x00\x00\x00\x00\xe9\xff\xff\xff\x26\x00\x00\x00\x27\x00\x00\x00\x08\x00\x00\x00\xca\xff\xff\xff\xca\xff\xff\xff\xca\xff\xff\xff\xca\xff\xff\xff\xca\xff\xff\xff\xca\xff\xff\xff\xed\xff\xff\xff\x29\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xef\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0\xff\xff\xff\x08\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyActOffsets = HappyA# "\x3b\x00\x00\x00\x3b\x00\x00\x00\x03\x00\x00\x00\xe8\xff\xff\xff\xd4\xff\xff\xff\x00\x00\x00\x00\x3d\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\xcf\xff\xff\xff\xfd\xff\xff\xff\x01\x00\x00\x00\xff\xff\xff\xff\x02\x00\x00\x00\xea\xff\xff\xff\x15\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00\x0b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00\x04\x00\x00\x00\x45\x00\x00\x00\x0a\x00\x00\x00\x35\x00\x00\x00\x36\x00\x00\x00\x37\x00\x00\x00\x38\x00\x00\x00\x39\x00\x00\x00\x12\x00\x00\x00\x13\x00\x00\x00\x13\x00\x00\x00\x13\x00\x00\x00\x13\x00\x00\x00\x29\x00\x00\x00\x47\x00\x00\x00\x14\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf1\xff\xff\xff\x00\x00\x00\x00\x0e\x00\x00\x00\x42\x00\x00\x00\x4e\x00\x00\x00\x16\x00\x00\x00\x3a\x00\x00\x00\x3c\x00\x00\x00\x3e\x00\x00\x00\x3f\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x00\x1e\x00\x00\x00\x1e\x00\x00\x00\x1e\x00\x00\x00\x00\x00\x00\x00\x1e\x00\x00\x00\x44\x00\x00\x00\x20\x00\x00\x00\x1f\x00\x00\x00\x1f\x00\x00\x00\xeb\xff\xff\xff\x22\x00\x00\x00\x21\x00\x00\x00\xeb\xff\xff\xff\xeb\xff\xff\xff\xeb\xff\xff\xff\xeb\xff\xff\xff\xeb\xff\xff\xff\xeb\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xeb\xff\xff\xff\x43\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x4d\x00\x00\x00\x00\x00\x00\x00\x5c\x00\x00\x00\x2b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x25\x00\x00\x00\xeb\xff\xff\xff\x2c\x00\x00\x00\x40\x00\x00\x00\xeb\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
 happyGotoOffsets :: HappyAddr
-happyGotoOffsets = HappyA# "\x32\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x33\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x31\x00\x00\x00\x34\x00\x00\x00\x35\x00\x00\x00\x36\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x37\x00\x00\x00\x12\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x30\x00\x00\x00\x38\x00\x00\x00\x39\x00\x00\x00\x3a\x00\x00\x00\x3b\x00\x00\x00\x3c\x00\x00\x00\x3d\x00\x00\x00\x14\x00\x00\x00\x00\x00\x00\x00\x3e\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3f\x00\x00\x00\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyGotoOffsets = HappyA# "\x68\x00\x00\x00\x00\x00\x00\x00\x69\x00\x00\x00\x00\x00\x00\x00\x1d\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x31\x00\x00\x00\x32\x00\x00\x00\x62\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x34\x00\x00\x00\x63\x00\x00\x00\x6a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x6b\x00\x00\x00\x6d\x00\x00\x00\x6e\x00\x00\x00\x6f\x00\x00\x00\x00\x00\x00\x00\x5f\x00\x00\x00\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x66\x00\x00\x00\x00\x00\x00\x00\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x11\x00\x00\x00\x18\x00\x00\x00\x19\x00\x00\x00\x1a\x00\x00\x00\x00\x00\x00\x00\x71\x00\x00\x00\x5e\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x10\x00\x00\x00\x6c\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x70\x00\x00\x00\x72\x00\x00\x00\x73\x00\x00\x00\x74\x00\x00\x00\x75\x00\x00\x00\x76\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x30\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x77\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x78\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x33\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
 happyDefActions :: HappyAddr
-happyDefActions = HappyA# "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf6\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfd\xff\xff\xff\xf4\xff\xff\xff\xfe\xff\xff\xff\xf5\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfb\xff\xff\xff\xf2\xff\xff\xff\x00\x00\x00\x00\xf3\xff\xff\xff\x00\x00\x00\x00\xfc\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf9\xff\xff\xff\xe8\xff\xff\xff\xe7\xff\xff\xff\x00\x00\x00\x00\xf1\xff\xff\xff\xeb\xff\xff\xff\xe9\xff\xff\xff\xea\xff\xff\xff\xec\xff\xff\xff\xed\xff\xff\xff\xee\xff\xff\xff\xef\xff\xff\xff\xf0\xff\xff\xff\xfa\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf7\xff\xff\xff\xf8\xff\xff\xff"#
+happyDefActions = HappyA# "\x00\x00\x00\x00\x00\x00\x00\x00\xfc\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\xfd\xff\xff\xff\x00\x00\x00\x00\xfa\xff\xff\xff\xf9\xff\xff\xff\xfb\xff\xff\xff\xf7\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xe6\xff\xff\xff\xf4\xff\xff\xff\x00\x00\x00\x00\xf8\xff\xff\xff\x00\x00\x00\x00\xf5\xff\xff\xff\xf6\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\xe4\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf1\xff\xff\xff\xce\xff\xff\xff\x00\x00\x00\x00\xf3\xff\xff\xff\xf2\xff\xff\xff\x00\x00\x00\x00\xe5\xff\xff\xff\xe3\xff\xff\xff\xcb\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\xf0\xff\xff\xff\xef\xff\xff\xff\xee\xff\xff\xff\xed\xff\xff\xff\xe7\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xec\xff\xff\xff\x00\x00\x00\x00\xc9\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xdb\xff\xff\xff\xd3\xff\xff\xff\xd4\xff\xff\xff\xd5\xff\xff\xff\xd2\xff\xff\xff\xdc\xff\xff\xff\xdd\xff\xff\xff\xde\xff\xff\xff\xdf\xff\xff\xff\xe0\xff\xff\xff\xd9\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\xe1\xff\xff\xff\xe2\xff\xff\xff\xcd\xff\xff\xff\xfe\xff\xff\xff\x00\x00\x00\x00\xd1\xff\xff\xff\xeb\xff\xff\xff\xea\xff\xff\xff\xe9\xff\xff\xff\xe8\xff\xff\xff\xd0\xff\xff\xff\xcf\xff\xff\xff\xca\xff\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd7\xff\xff\xff\x00\x00\x00\x00\xda\xff\xff\xff\xd8\xff\xff\xff\xcc\xff\xff\xff\xd6\xff\xff\xff"#
 
 happyCheck :: HappyAddr
-happyCheck = HappyA# "\xff\xff\xff\xff\x2e\x00\x00\x00\x32\x00\x00\x00\x33\x00\x00\x00\x34\x00\x00\x00\x35\x00\x00\x00\x36\x00\x00\x00\x37\x00\x00\x00\x3e\x00\x00\x00\x2e\x00\x00\x00\x40\x00\x00\x00\x04\x00\x00\x00\x05\x00\x00\x00\x04\x00\x00\x00\x05\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00\x41\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00\x42\x00\x00\x00\x03\x00\x00\x00\x03\x00\x00\x00\x2f\x00\x00\x00\x03\x00\x00\x00\x41\x00\x00\x00\x41\x00\x00\x00\x41\x00\x00\x00\x2f\x00\x00\x00\x41\x00\x00\x00\x06\x00\x00\x00\x41\x00\x00\x00\x41\x00\x00\x00\x06\x00\x00\x00\x41\x00\x00\x00\x05\x00\x00\x00\x41\x00\x00\x00\x05\x00\x00\x00\x22\x00\x00\x00\x06\x00\x00\x00\x41\x00\x00\x00\x06\x00\x00\x00\x41\x00\x00\x00\x41\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x06\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\x02\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x05\x00\x00\x00\x05\x00\x00\x00\x05\x00\x00\x00\x05\x00\x00\x00\x05\x00\x00\x00\x05\x00\x00\x00\xff\xff\xff\xff\x06\x00\x00\x00\x06\x00\x00\x00\x06\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
+happyCheck = HappyA# "\xff\xff\xff\xff\x10\x00\x00\x00\x33\x00\x00\x00\x2f\x00\x00\x00\x1a\x00\x00\x00\x1b\x00\x00\x00\x1c\x00\x00\x00\x1d\x00\x00\x00\x1e\x00\x00\x00\x04\x00\x00\x00\x20\x00\x00\x00\x3c\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x09\x00\x00\x00\x0a\x00\x00\x00\x0d\x00\x00\x00\x09\x00\x00\x00\x0a\x00\x00\x00\x0a\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x25\x00\x00\x00\x26\x00\x00\x00\x44\x00\x00\x00\x09\x00\x00\x00\x0a\x00\x00\x00\x0a\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x0a\x00\x00\x00\x0a\x00\x00\x00\x0a\x00\x00\x00\x34\x00\x00\x00\x35\x00\x00\x00\x36\x00\x00\x00\x37\x00\x00\x00\x38\x00\x00\x00\x39\x00\x00\x00\x40\x00\x00\x00\x41\x00\x00\x00\x45\x00\x00\x00\x43\x00\x00\x00\x44\x00\x00\x00\x22\x00\x00\x00\x23\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x30\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00\x05\x00\x00\x00\x06\x00\x00\x00\x0b\x00\x00\x00\x0c\x00\x00\x00\x02\x00\x00\x00\x0b\x00\x00\x00\x0c\x00\x00\x00\x03\x00\x00\x00\x44\x00\x00\x00\x41\x00\x00\x00\x44\x00\x00\x00\x42\x00\x00\x00\x30\x00\x00\x00\x42\x00\x00\x00\x2c\x00\x00\x00\x3d\x00\x00\x00\x04\x00\x00\x00\x21\x00\x00\x00\x44\x00\x00\x00\x05\x00\x00\x00\x0b\x00\x00\x00\x44\x00\x00\x00\x1a\x00\x00\x00\x1a\x00\x00\x00\x1a\x00\x00\x00\x1a\x00\x00\x00\x1a\x00\x00\x00\x06\x00\x00\x00\x11\x00\x00\x00\x44\x00\x00\x00\x44\x00\x00\x00\x44\x00\x00\x00\x0c\x00\x00\x00\x44\x00\x00\x00\x21\x00\x00\x00\x3a\x00\x00\x00\x21\x00\x00\x00\x02\x00\x00\x00\x21\x00\x00\x00\x21\x00\x00\x00\x41\x00\x00\x00\x44\x00\x00\x00\x44\x00\x00\x00\x43\x00\x00\x00\x22\x00\x00\x00\x41\x00\x00\x00\x3b\x00\x00\x00\x00\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x0d\x00\x00\x00\x0f\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x30\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x0e\x00\x00\x00\x04\x00\x00\x00\xff\xff\xff\xff\x00\x00\x00\x00\x0c\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\x0c\x00\x00\x00\xff\xff\xff\xff\x0c\x00\x00\x00\x0c\x00\x00\x00\x0c\x00\x00\x00\x0c\x00\x00\x00\x0c\x00\x00\x00\xff\xff\xff\xff\x0c\x00\x00\x00\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff"#
 
 happyTable :: HappyAddr
-happyTable = HappyA# "\x00\x00\x00\x00\x07\x00\x00\x00\x21\x00\x00\x00\x22\x00\x00\x00\x23\x00\x00\x00\x24\x00\x00\x00\x25\x00\x00\x00\x26\x00\x00\x00\x30\x00\x00\x00\x09\x00\x00\x00\x31\x00\x00\x00\x16\x00\x00\x00\x17\x00\x00\x00\x13\x00\x00\x00\x14\x00\x00\x00\x2b\x00\x00\x00\x2c\x00\x00\x00\x1d\x00\x00\x00\x19\x00\x00\x00\x05\x00\x00\x00\x08\x00\x00\x00\x18\x00\x00\x00\x19\x00\x00\x00\x2d\x00\x00\x00\x19\x00\x00\x00\x03\x00\x00\x00\xff\xff\xff\xff\x0d\x00\x00\x00\x0c\x00\x00\x00\x0b\x00\x00\x00\x0a\x00\x00\x00\x0f\x00\x00\x00\x08\x00\x00\x00\x0f\x00\x00\x00\x15\x00\x00\x00\x1b\x00\x00\x00\x1d\x00\x00\x00\x0f\x00\x00\x00\x1b\x00\x00\x00\x18\x00\x00\x00\x29\x00\x00\x00\x28\x00\x00\x00\x20\x00\x00\x00\x1f\x00\x00\x00\x27\x00\x00\x00\x38\x00\x00\x00\x1b\x00\x00\x00\x2d\x00\x00\x00\x3a\x00\x00\x00\x39\x00\x00\x00\x03\x00\x00\x00\x11\x00\x00\x00\x05\x00\x00\x00\x10\x00\x00\x00\x36\x00\x00\x00\x0f\x00\x00\x00\x0d\x00\x00\x00\x1b\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x35\x00\x00\x00\x34\x00\x00\x00\x33\x00\x00\x00\x32\x00\x00\x00\x31\x00\x00\x00\x2e\x00\x00\x00\x00\x00\x00\x00\x29\x00\x00\x00\x3b\x00\x00\x00\x3a\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
+happyTable = HappyA# "\x00\x00\x00\x00\x3f\x00\x00\x00\x0c\x00\x00\x00\x0a\x00\x00\x00\x1a\x00\x00\x00\x1b\x00\x00\x00\x1c\x00\x00\x00\x1d\x00\x00\x00\x1e\x00\x00\x00\x29\x00\x00\x00\x1f\x00\x00\x00\x0d\x00\x00\x00\x29\x00\x00\x00\x29\x00\x00\x00\x2a\x00\x00\x00\x2b\x00\x00\x00\x06\x00\x00\x00\x55\x00\x00\x00\x2b\x00\x00\x00\x38\x00\x00\x00\x29\x00\x00\x00\x29\x00\x00\x00\x40\x00\x00\x00\x41\x00\x00\x00\x0b\x00\x00\x00\x54\x00\x00\x00\x2b\x00\x00\x00\x5d\x00\x00\x00\x29\x00\x00\x00\x29\x00\x00\x00\x29\x00\x00\x00\x06\x00\x00\x00\x07\x00\x00\x00\x08\x00\x00\x00\x5c\x00\x00\x00\x5b\x00\x00\x00\x5a\x00\x00\x00\x42\x00\x00\x00\x43\x00\x00\x00\x44\x00\x00\x00\x45\x00\x00\x00\x46\x00\x00\x00\x47\x00\x00\x00\x49\x00\x00\x00\x4a\x00\x00\x00\xff\xff\xff\xff\x4b\x00\x00\x00\x4c\x00\x00\x00\x3d\x00\x00\x00\x3e\x00\x00\x00\x5f\x00\x00\x00\x60\x00\x00\x00\x12\x00\x00\x00\x08\x00\x00\x00\x0e\x00\x00\x00\x0f\x00\x00\x00\x10\x00\x00\x00\x27\x00\x00\x00\x10\x00\x00\x00\x63\x00\x00\x00\x64\x00\x00\x00\x03\x00\x00\x00\x69\x00\x00\x00\x64\x00\x00\x00\x0f\x00\x00\x00\x15\x00\x00\x00\x14\x00\x00\x00\x0b\x00\x00\x00\x12\x00\x00\x00\x18\x00\x00\x00\x12\x00\x00\x00\x17\x00\x00\x00\x16\x00\x00\x00\x27\x00\x00\x00\x2f\x00\x00\x00\x29\x00\x00\x00\x2e\x00\x00\x00\x3c\x00\x00\x00\x0b\x00\x00\x00\x24\x00\x00\x00\x23\x00\x00\x00\x22\x00\x00\x00\x21\x00\x00\x00\x20\x00\x00\x00\x3a\x00\x00\x00\x59\x00\x00\x00\x34\x00\x00\x00\x0b\x00\x00\x00\x0b\x00\x00\x00\x62\x00\x00\x00\x0b\x00\x00\x00\x38\x00\x00\x00\x53\x00\x00\x00\x37\x00\x00\x00\x03\x00\x00\x00\x36\x00\x00\x00\x35\x00\x00\x00\x57\x00\x00\x00\x0b\x00\x00\x00\x0b\x00\x00\x00\x52\x00\x00\x00\x63\x00\x00\x00\x69\x00\x00\x00\x67\x00\x00\x00\x03\x00\x00\x00\x18\x00\x00\x00\x04\x00\x00\x00\x25\x00\x00\x00\x2c\x00\x00\x00\x57\x00\x00\x00\x24\x00\x00\x00\x32\x00\x00\x00\x66\x00\x00\x00\x31\x00\x00\x00\x30\x00\x00\x00\x2f\x00\x00\x00\x3a\x00\x00\x00\x59\x00\x00\x00\x00\x00\x00\x00\x60\x00\x00\x00\x53\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x50\x00\x00\x00\x00\x00\x00\x00\x4f\x00\x00\x00\x4e\x00\x00\x00\x4d\x00\x00\x00\x4c\x00\x00\x00\x47\x00\x00\x00\x00\x00\x00\x00\x67\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"#
 
-happyReduceArr = Happy_Data_Array.array (1, 36) [
+happyReduceArr = Happy_Data_Array.array (1, 54) [
         (1 , happyReduce_1),
         (2 , happyReduce_2),
         (3 , happyReduce_3),
@@ -100,402 +107,608 @@ happyReduceArr = Happy_Data_Array.array (1, 36) [
         (33 , happyReduce_33),
         (34 , happyReduce_34),
         (35 , happyReduce_35),
-        (36 , happyReduce_36)
+        (36 , happyReduce_36),
+        (37 , happyReduce_37),
+        (38 , happyReduce_38),
+        (39 , happyReduce_39),
+        (40 , happyReduce_40),
+        (41 , happyReduce_41),
+        (42 , happyReduce_42),
+        (43 , happyReduce_43),
+        (44 , happyReduce_44),
+        (45 , happyReduce_45),
+        (46 , happyReduce_46),
+        (47 , happyReduce_47),
+        (48 , happyReduce_48),
+        (49 , happyReduce_49),
+        (50 , happyReduce_50),
+        (51 , happyReduce_51),
+        (52 , happyReduce_52),
+        (53 , happyReduce_53),
+        (54 , happyReduce_54)
         ]
 
 happyRuleArr :: HappyAddr
-happyRuleArr = HappyA# "\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x04\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x0a\x00\x00\x00\x00\x00\x00\x00\x0a\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x03\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x03\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x03\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x06\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x07\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00\x08\x00\x00\x00\x01\x00\x00\x00"#
+happyRuleArr = HappyA# "\x00\x00\x00\x00\x0a\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x00\x00\x03\x00\x00\x00\x01\x00\x00\x00\x03\x00\x00\x00\x03\x00\x00\x00\x04\x00\x00\x00\x01\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x04\x00\x00\x00\x03\x00\x00\x00\x05\x00\x00\x00\x01\x00\x00\x00\x05\x00\x00\x00\x03\x00\x00\x00\x06\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x02\x00\x00\x00\x07\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x04\x00\x00\x00\x07\x00\x00\x00\x05\x00\x00\x00\x07\x00\x00\x00\x05\x00\x00\x00\x07\x00\x00\x00\x05\x00\x00\x00\x07\x00\x00\x00\x05\x00\x00\x00\x07\x00\x00\x00\x03\x00\x00\x00\x07\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x02\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x09\x00\x00\x00\x01\x00\x00\x00\x09\x00\x00\x00\x03\x00\x00\x00\x09\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x05\x00\x00\x00\x0a\x00\x00\x00\x03\x00\x00\x00\x0a\x00\x00\x00\x05\x00\x00\x00\x0b\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x03\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x0c\x00\x00\x00\x01\x00\x00\x00\x0d\x00\x00\x00\x03\x00\x00\x00\x0d\x00\x00\x00\x04\x00\x00\x00\x0d\x00\x00\x00\x04\x00\x00\x00\x0d\x00\x00\x00\x00\x00\x00\x00\x0e\x00\x00\x00\x02\x00\x00\x00\x0e\x00\x00\x00\x04\x00\x00\x00\x0e\x00\x00\x00\x00\x00\x00\x00\x0f\x00\x00\x00\x02\x00\x00\x00\x0f\x00\x00\x00\x00\x00\x00\x00"#
 
 happyCatchStates :: [Happy_Prelude.Int]
 happyCatchStates = []
 
-happy_n_terms = 67 :: Happy_Prelude.Int
-happy_n_nonterms = 9 :: Happy_Prelude.Int
+happy_n_terms = 70 :: Happy_Prelude.Int
+happy_n_nonterms = 16 :: Happy_Prelude.Int
 
 happy_n_starts = 1 :: Happy_Prelude.Int
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_1 = happyReduce 4# 0# happyReduction_1
-happyReduction_1 ((HappyAbsSyn7  happy_var_4) `HappyStk`
+happyReduce_1 = happyReduce 10# 0# happyReduction_1
+happyReduction_1 ((HappyAbsSyn20  happy_var_10) `HappyStk`
+        (HappyAbsSyn19  happy_var_9) `HappyStk`
+        (HappyAbsSyn18  happy_var_8) `HappyStk`
+        (HappyAbsSyn13  happy_var_7) `HappyStk`
+        (HappyAbsSyn12  happy_var_6) `HappyStk`
+        (HappyAbsSyn10  happy_var_5) `HappyStk`
         _ `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectStarColumns happy_var_4
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_2 = happyReduce 4# 0# happyReduction_2
-happyReduction_2 ((HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
+        (HappyAbsSyn7  happy_var_3) `HappyStk`
         (HappyAbsSyn6  happy_var_2) `HappyStk`
         _ `HappyStk`
         happyRest)
          = HappyAbsSyn5
-                 (SelectColumns happy_var_2 happy_var_4
+                 (Select happy_var_2 happy_var_3 happy_var_5 happy_var_6 happy_var_7 happy_var_8 happy_var_9 happy_var_10
         ) `HappyStk` happyRest
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_3 = happyReduce 6# 0# happyReduction_3
-happyReduction_3 ((HappyAbsSyn8  happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectStarColumnsWhere happy_var_4 happy_var_6
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_4 = happyReduce 6# 0# happyReduction_4
-happyReduction_4 ((HappyAbsSyn8  happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn6  happy_var_2) `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectColumnsWhere happy_var_2 happy_var_4 happy_var_6
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_5 = happyReduce 8# 0# happyReduction_5
-happyReduction_5 (_ `HappyStk`
-        (HappyTerminal (TokenIdentifier _ happy_var_7)) `HappyStk`
-        (HappyTerminal happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectStarColumnsOrder happy_var_4 (OrderBy happy_var_6 happy_var_7)
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_6 = happyReduce 8# 0# happyReduction_6
-happyReduction_6 (_ `HappyStk`
-        (HappyTerminal (TokenIdentifier _ happy_var_7)) `HappyStk`
-        (HappyTerminal happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn6  happy_var_2) `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectColumnsOrder happy_var_2 happy_var_4 (OrderBy happy_var_6 happy_var_7)
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_7 = happyReduce 10# 0# happyReduction_7
-happyReduction_7 (_ `HappyStk`
-        (HappyTerminal (TokenIdentifier _ happy_var_9)) `HappyStk`
-        (HappyTerminal happy_var_8) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn8  happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectStarColumnsWhereOrder happy_var_4 happy_var_6 (OrderBy happy_var_8 happy_var_9)
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_8 = happyReduce 10# 0# happyReduction_8
-happyReduction_8 (_ `HappyStk`
-        (HappyTerminal (TokenIdentifier _ happy_var_9)) `HappyStk`
-        (HappyTerminal happy_var_8) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn8  happy_var_6) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn7  happy_var_4) `HappyStk`
-        _ `HappyStk`
-        (HappyAbsSyn6  happy_var_2) `HappyStk`
-        _ `HappyStk`
-        happyRest)
-         = HappyAbsSyn5
-                 (SelectColumnsWhereOrder happy_var_2 happy_var_4 happy_var_6 (OrderBy happy_var_8 happy_var_9)
-        ) `HappyStk` happyRest
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_9 = happySpecReduce_1  1# happyReduction_9
-happyReduction_9 (HappyTerminal (TokenIdentifier _ happy_var_1))
+happyReduce_2 = happySpecReduce_1  1# happyReduction_2
+happyReduction_2 _
          =  HappyAbsSyn6
+                 (Just Distinct
+        )
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_3 = happySpecReduce_0  1# happyReduction_3
+happyReduction_3  =  HappyAbsSyn6
+                 (Nothing
+        )
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_4 = happySpecReduce_1  2# happyReduction_4
+happyReduction_4 _
+         =  HappyAbsSyn7
+                 (SelectAllColumns
+        )
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_5 = happySpecReduce_1  2# happyReduction_5
+happyReduction_5 (HappyAbsSyn8  happy_var_1)
+         =  HappyAbsSyn7
+                 (SelectColumns happy_var_1
+        )
+happyReduction_5 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_6 = happySpecReduce_1  3# happyReduction_6
+happyReduction_6 (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn8
                  ([happy_var_1]
         )
-happyReduction_9 _  = notHappyAtAll 
+happyReduction_6 _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_10 = happySpecReduce_3  1# happyReduction_10
-happyReduction_10 (HappyAbsSyn6  happy_var_3)
+happyReduce_7 = happySpecReduce_3  3# happyReduction_7
+happyReduction_7 (HappyAbsSyn8  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn8
+                 (happy_var_1 : happy_var_3
+        )
+happyReduction_7 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_8 = happySpecReduce_1  4# happyReduction_8
+happyReduction_8 (HappyTerminal (TokenIdentifier _ happy_var_1))
+         =  HappyAbsSyn9
+                 (ColumnIdent happy_var_1
+        )
+happyReduction_8 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_9 = happyReduce 4# 4# happyReduction_9
+happyReduction_9 (_ `HappyStk`
+        (HappyTerminal (TokenInteger _ happy_var_3)) `HappyStk`
+        _ `HappyStk`
+        (HappyTerminal (TokenIdentifier _ happy_var_1)) `HappyStk`
+        happyRest)
+         = HappyAbsSyn9
+                 (ColumnByIndex happy_var_1 happy_var_3
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_10 = happySpecReduce_3  4# happyReduction_10
+happyReduction_10 (HappyTerminal (TokenIdentifier _ happy_var_3))
         _
         (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn6
-                 (happy_var_1 : happy_var_3
+         =  HappyAbsSyn9
+                 (ColumnByName happy_var_1 happy_var_3
         )
 happyReduction_10 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_11 = happySpecReduce_1  2# happyReduction_11
-happyReduction_11 (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn7
+happyReduce_11 = happySpecReduce_1  5# happyReduction_11
+happyReduction_11 (HappyAbsSyn11  happy_var_1)
+         =  HappyAbsSyn10
                  ([happy_var_1]
         )
 happyReduction_11 _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_12 = happySpecReduce_3  2# happyReduction_12
-happyReduction_12 (HappyAbsSyn7  happy_var_3)
+happyReduce_12 = happySpecReduce_3  5# happyReduction_12
+happyReduction_12 (HappyAbsSyn10  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn7
+        (HappyAbsSyn11  happy_var_1)
+         =  HappyAbsSyn10
                  (happy_var_1 : happy_var_3
         )
 happyReduction_12 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_13 = happySpecReduce_1  3# happyReduction_13
-happyReduction_13 (HappyAbsSyn9  happy_var_1)
-         =  HappyAbsSyn8
-                 ([happy_var_1]
+happyReduce_13 = happySpecReduce_3  6# happyReduction_13
+happyReduction_13 (HappyTerminal (TokenIdentifier _ happy_var_3))
+        _
+        (HappyTerminal (TokenPath _ happy_var_1))
+         =  HappyAbsSyn11
+                 (TableAlias happy_var_1 happy_var_3
         )
-happyReduction_13 _  = notHappyAtAll 
+happyReduction_13 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_14 = happySpecReduce_3  3# happyReduction_14
-happyReduction_14 (HappyAbsSyn8  happy_var_3)
+happyReduce_14 = happySpecReduce_2  7# happyReduction_14
+happyReduction_14 (HappyAbsSyn9  happy_var_2)
         _
-        (HappyAbsSyn9  happy_var_1)
-         =  HappyAbsSyn8
-                 (happy_var_1 : happy_var_3
+         =  HappyAbsSyn12
+                 (Just (InnerJoin happy_var_2)
         )
-happyReduction_14 _ _ _  = notHappyAtAll 
+happyReduction_14 _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_15 = happySpecReduce_3  4# happyReduction_15
-happyReduction_15 (HappyAbsSyn10  happy_var_3)
+happyReduce_15 = happySpecReduce_3  7# happyReduction_15
+happyReduction_15 (HappyAbsSyn9  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
-                 (Equals happy_var_1 happy_var_3
+        _
+         =  HappyAbsSyn12
+                 (Just (InnerJoin happy_var_3)
         )
 happyReduction_15 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_16 = happySpecReduce_3  4# happyReduction_16
-happyReduction_16 (HappyAbsSyn10  happy_var_3)
+happyReduce_16 = happySpecReduce_3  7# happyReduction_16
+happyReduction_16 (HappyAbsSyn9  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
-                 (NotEq happy_var_1 happy_var_3
+        _
+         =  HappyAbsSyn12
+                 (Just (LeftJoin happy_var_3)
         )
 happyReduction_16 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_17 = happySpecReduce_3  4# happyReduction_17
-happyReduction_17 (HappyAbsSyn10  happy_var_3)
+happyReduce_17 = happySpecReduce_3  7# happyReduction_17
+happyReduction_17 (HappyAbsSyn9  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
-                 (LessThan happy_var_1 happy_var_3
+        _
+         =  HappyAbsSyn12
+                 (Just (RightJoin happy_var_3)
         )
 happyReduction_17 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_18 = happySpecReduce_3  4# happyReduction_18
-happyReduction_18 (HappyAbsSyn10  happy_var_3)
+happyReduce_18 = happySpecReduce_3  7# happyReduction_18
+happyReduction_18 (HappyAbsSyn9  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
-                 (GreaterThan happy_var_1 happy_var_3
+        _
+         =  HappyAbsSyn12
+                 (Just (FullJoin happy_var_3)
         )
 happyReduction_18 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_19 = happySpecReduce_3  4# happyReduction_19
-happyReduction_19 (HappyAbsSyn10  happy_var_3)
+happyReduce_19 = happyReduce 4# 7# happyReduction_19
+happyReduction_19 ((HappyAbsSyn15  happy_var_4) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_2) `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn12
+                 (Just (InnerJoinC happy_var_2 happy_var_4)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_20 = happyReduce 5# 7# happyReduction_20
+happyReduction_20 ((HappyAbsSyn15  happy_var_5) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn12
+                 (Just (InnerJoinC happy_var_3 happy_var_5)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_21 = happyReduce 5# 7# happyReduction_21
+happyReduction_21 ((HappyAbsSyn15  happy_var_5) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn12
+                 (Just (LeftJoinC happy_var_3 happy_var_5)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_22 = happyReduce 5# 7# happyReduction_22
+happyReduction_22 ((HappyAbsSyn15  happy_var_5) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn12
+                 (Just (RightJoinC happy_var_3 happy_var_5)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_23 = happyReduce 5# 7# happyReduction_23
+happyReduction_23 ((HappyAbsSyn15  happy_var_5) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn12
+                 (Just (FullJoinC happy_var_3 happy_var_5)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_24 = happySpecReduce_3  7# happyReduction_24
+happyReduction_24 (HappyTerminal (TokenIdentifier _ happy_var_3))
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
+        _
+         =  HappyAbsSyn12
+                 (Just (CrossJoin happy_var_3)
+        )
+happyReduction_24 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_25 = happySpecReduce_0  7# happyReduction_25
+happyReduction_25  =  HappyAbsSyn12
+                 (Nothing
+        )
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_26 = happySpecReduce_2  8# happyReduction_26
+happyReduction_26 (HappyAbsSyn14  happy_var_2)
+        _
+         =  HappyAbsSyn13
+                 (Just happy_var_2
+        )
+happyReduction_26 _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_27 = happySpecReduce_0  8# happyReduction_27
+happyReduction_27  =  HappyAbsSyn13
+                 (Nothing
+        )
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_28 = happySpecReduce_1  9# happyReduction_28
+happyReduction_28 (HappyAbsSyn15  happy_var_1)
+         =  HappyAbsSyn14
+                 ([happy_var_1]
+        )
+happyReduction_28 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_29 = happySpecReduce_3  9# happyReduction_29
+happyReduction_29 (HappyAbsSyn14  happy_var_3)
+        _
+        (HappyAbsSyn15  happy_var_1)
+         =  HappyAbsSyn14
+                 (happy_var_1 : happy_var_3
+        )
+happyReduction_29 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_30 = happySpecReduce_3  9# happyReduction_30
+happyReduction_30 (HappyAbsSyn14  happy_var_3)
+        _
+        (HappyAbsSyn15  happy_var_1)
+         =  HappyAbsSyn14
+                 (happy_var_1 : happy_var_3
+        )
+happyReduction_30 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_31 = happySpecReduce_3  10# happyReduction_31
+happyReduction_31 (HappyAbsSyn17  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
+                 (Equals happy_var_1 happy_var_3
+        )
+happyReduction_31 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_32 = happySpecReduce_3  10# happyReduction_32
+happyReduction_32 (HappyAbsSyn17  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
+                 (NotEquals happy_var_1 happy_var_3
+        )
+happyReduction_32 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_33 = happySpecReduce_3  10# happyReduction_33
+happyReduction_33 (HappyAbsSyn17  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
+                 (LessThan happy_var_1 happy_var_3
+        )
+happyReduction_33 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_34 = happySpecReduce_3  10# happyReduction_34
+happyReduction_34 (HappyAbsSyn17  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
+                 (GreaterThan happy_var_1 happy_var_3
+        )
+happyReduction_34 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_35 = happySpecReduce_3  10# happyReduction_35
+happyReduction_35 (HappyAbsSyn17  happy_var_3)
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
                  (LessThanEq happy_var_1 happy_var_3
         )
-happyReduction_19 _ _ _  = notHappyAtAll 
+happyReduction_35 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_20 = happySpecReduce_3  4# happyReduction_20
-happyReduction_20 (HappyAbsSyn10  happy_var_3)
+happyReduce_36 = happySpecReduce_3  10# happyReduction_36
+happyReduction_36 (HappyAbsSyn17  happy_var_3)
         _
-        (HappyTerminal (TokenIdentifier _ happy_var_1))
-         =  HappyAbsSyn9
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
                  (GreaterThanEq happy_var_1 happy_var_3
         )
-happyReduction_20 _ _ _  = notHappyAtAll 
+happyReduction_36 _ _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_21 = happySpecReduce_1  5# happyReduction_21
-happyReduction_21 (HappyTerminal (TokenString _ happy_var_1))
-         =  HappyAbsSyn10
+happyReduce_37 = happyReduce 5# 10# happyReduction_37
+happyReduction_37 (_ `HappyStk`
+        (HappyAbsSyn16  happy_var_4) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_1) `HappyStk`
+        happyRest)
+         = HappyAbsSyn15
+                 (InList happy_var_1 happy_var_4
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_38 = happySpecReduce_3  10# happyReduction_38
+happyReduction_38 (HappyTerminal (TokenString _ happy_var_3))
+        _
+        (HappyAbsSyn9  happy_var_1)
+         =  HappyAbsSyn15
+                 (Like happy_var_1 happy_var_3
+        )
+happyReduction_38 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_39 = happyReduce 5# 10# happyReduction_39
+happyReduction_39 ((HappyAbsSyn17  happy_var_5) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn17  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        (HappyAbsSyn9  happy_var_1) `HappyStk`
+        happyRest)
+         = HappyAbsSyn15
+                 (Between happy_var_1 happy_var_3 happy_var_5
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_40 = happySpecReduce_1  11# happyReduction_40
+happyReduction_40 (HappyAbsSyn17  happy_var_1)
+         =  HappyAbsSyn16
+                 ([happy_var_1]
+        )
+happyReduction_40 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_41 = happySpecReduce_3  11# happyReduction_41
+happyReduction_41 (HappyAbsSyn16  happy_var_3)
+        _
+        (HappyAbsSyn17  happy_var_1)
+         =  HappyAbsSyn16
+                 (happy_var_1 : happy_var_3
+        )
+happyReduction_41 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_42 = happySpecReduce_1  12# happyReduction_42
+happyReduction_42 (HappyTerminal (TokenString _ happy_var_1))
+         =  HappyAbsSyn17
                  (ValString happy_var_1
         )
-happyReduction_21 _  = notHappyAtAll 
+happyReduction_42 _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_22 = happySpecReduce_1  5# happyReduction_22
-happyReduction_22 (HappyTerminal (TokenNumber _ happy_var_1))
-         =  HappyAbsSyn10
+happyReduce_43 = happySpecReduce_1  12# happyReduction_43
+happyReduction_43 (HappyTerminal (TokenInteger _ happy_var_1))
+         =  HappyAbsSyn17
+                 (ValInteger happy_var_1
+        )
+happyReduction_43 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_44 = happySpecReduce_1  12# happyReduction_44
+happyReduction_44 (HappyTerminal (TokenNumber _ happy_var_1))
+         =  HappyAbsSyn17
                  (ValNumber happy_var_1
         )
-happyReduction_22 _  = notHappyAtAll 
+happyReduction_44 _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_23 = happySpecReduce_1  6# happyReduction_23
-happyReduction_23 _
-         =  HappyAbsSyn11
-                 (Asc
+happyReduce_45 = happySpecReduce_1  12# happyReduction_45
+happyReduction_45 (HappyTerminal (TokenIdentifier _ happy_var_1))
+         =  HappyAbsSyn17
+                 (ValIdent happy_var_1
+        )
+happyReduction_45 _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_46 = happySpecReduce_3  13# happyReduction_46
+happyReduction_46 (HappyAbsSyn9  happy_var_3)
+        _
+        _
+         =  HappyAbsSyn18
+                 (Just (OrderByAsc happy_var_3)
+        )
+happyReduction_46 _ _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_47 = happyReduce 4# 13# happyReduction_47
+happyReduction_47 (_ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn18
+                 (Just (OrderByAsc happy_var_3)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_48 = happyReduce 4# 13# happyReduction_48
+happyReduction_48 (_ `HappyStk`
+        (HappyAbsSyn9  happy_var_3) `HappyStk`
+        _ `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn18
+                 (Just (OrderByDesc happy_var_3)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_49 = happySpecReduce_0  13# happyReduction_49
+happyReduction_49  =  HappyAbsSyn18
+                 (Nothing
         )
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_24 = happySpecReduce_1  6# happyReduction_24
-happyReduction_24 _
-         =  HappyAbsSyn11
-                 (Desc
+happyReduce_50 = happySpecReduce_2  14# happyReduction_50
+happyReduction_50 (HappyTerminal (TokenInteger _ happy_var_2))
+        _
+         =  HappyAbsSyn19
+                 (Just (Limit happy_var_2)
+        )
+happyReduction_50 _ _  = notHappyAtAll 
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_51 = happyReduce 4# 14# happyReduction_51
+happyReduction_51 ((HappyTerminal (TokenInteger _ happy_var_4)) `HappyStk`
+        _ `HappyStk`
+        (HappyTerminal (TokenInteger _ happy_var_2)) `HappyStk`
+        _ `HappyStk`
+        happyRest)
+         = HappyAbsSyn19
+                 (Just (LimitOffset happy_var_2 happy_var_4)
+        ) `HappyStk` happyRest
+
+#if __GLASGOW_HASKELL__ >= 710
+#endif
+happyReduce_52 = happySpecReduce_0  14# happyReduction_52
+happyReduction_52  =  HappyAbsSyn19
+                 (Nothing
         )
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_25 = happySpecReduce_1  7# happyReduction_25
-happyReduction_25 _
-         =  HappyAbsSyn12
-                 (Add
+happyReduce_53 = happySpecReduce_2  15# happyReduction_53
+happyReduction_53 (HappyAbsSyn5  happy_var_2)
+        _
+         =  HappyAbsSyn20
+                 (Just happy_var_2
         )
+happyReduction_53 _ _  = notHappyAtAll 
 
 #if __GLASGOW_HASKELL__ >= 710
 #endif
-happyReduce_26 = happySpecReduce_1  7# happyReduction_26
-happyReduction_26 _
-         =  HappyAbsSyn12
-                 (Minus
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_27 = happySpecReduce_1  7# happyReduction_27
-happyReduction_27 _
-         =  HappyAbsSyn12
-                 (Multiply
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_28 = happySpecReduce_1  7# happyReduction_28
-happyReduction_28 _
-         =  HappyAbsSyn12
-                 (Comma
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_29 = happySpecReduce_1  7# happyReduction_29
-happyReduction_29 _
-         =  HappyAbsSyn12
-                 (Divide
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_30 = happySpecReduce_1  7# happyReduction_30
-happyReduction_30 _
-         =  HappyAbsSyn12
-                 (Modulo
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_31 = happySpecReduce_1  8# happyReduction_31
-happyReduction_31 _
-         =  HappyAbsSyn13
-                 (Equals
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_32 = happySpecReduce_1  8# happyReduction_32
-happyReduction_32 _
-         =  HappyAbsSyn13
-                 (NotEq
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_33 = happySpecReduce_1  8# happyReduction_33
-happyReduction_33 _
-         =  HappyAbsSyn13
-                 (LessThan
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_34 = happySpecReduce_1  8# happyReduction_34
-happyReduction_34 _
-         =  HappyAbsSyn13
-                 (GreaterThan
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_35 = happySpecReduce_1  8# happyReduction_35
-happyReduction_35 _
-         =  HappyAbsSyn13
-                 (LessThanEq
-        )
-
-#if __GLASGOW_HASKELL__ >= 710
-#endif
-happyReduce_36 = happySpecReduce_1  8# happyReduction_36
-happyReduction_36 _
-         =  HappyAbsSyn13
-                 (GreaterThanEq
+happyReduce_54 = happySpecReduce_0  15# happyReduction_54
+happyReduction_54  =  HappyAbsSyn20
+                 (Nothing
         )
 
 happyTerminalToTok term = case term of {
         TokenSelect _ -> 2#;
         TokenFrom _ -> 3#;
-        TokenWhere -> 4#;
+        TokenWhere _ -> 4#;
         TokenOrder _ -> 5#;
-        TokenBY _ -> 6#;
+        TokenBy _ -> 6#;
         TokenAsc _ -> 7#;
         TokenDesc _ -> 8#;
         TokenGroup _ -> 9#;
@@ -521,7 +734,7 @@ happyTerminalToTok term = case term of {
         TokenRight _ -> 29#;
         TokenFull _ -> 30#;
         TokenOuter _ -> 31#;
-        TokenCrossJoin _ -> 32#;
+        TokenCross _ -> 32#;
         TokenOn _ -> 33#;
         TokenAnd _ -> 34#;
         TokenOr _ -> 35#;
@@ -533,28 +746,31 @@ happyTerminalToTok term = case term of {
         TokenThen _ -> 41#;
         TokenElse _ -> 42#;
         TokenEnd _ -> 43#;
-        TokenPlus _ -> 44#;
-        TokenMinus _ -> 45#;
-        TokenMultiply _ -> 46#;
-        TokenComma _ -> 47#;
-        TokenDivide _ -> 48#;
-        TokenModulo _ -> 49#;
-        TokenEquals _ -> 50#;
-        TokenNotEquals _ -> 51#;
-        TokenLessThan _ -> 52#;
-        TokenGreaterThan _ -> 53#;
-        TokenLessThanEq _ -> 54#;
-        TokenGreaterThanEq _ -> 55#;
-        TokenLParen _ -> 56#;
-        TokenRParen _ -> 57#;
-        TokenLBracket _ -> 58#;
-        TokenRBracket _ -> 59#;
-        TokenLBrace _ -> 60#;
-        TokenRBrace _ -> 61#;
-        TokenNumber _ happy_dollar_dollar -> 62#;
-        TokenFilename _ happy_dollar_dollar -> 63#;
-        TokenString _ happy_dollar_dollar -> 64#;
-        TokenIdentifier _ happy_dollar_dollar -> 65#;
+        TokenAs _ -> 44#;
+        TokenPlus _ -> 45#;
+        TokenMinus _ -> 46#;
+        TokenMultiply _ -> 47#;
+        TokenComma _ -> 48#;
+        TokenDivide _ -> 49#;
+        TokenModulo _ -> 50#;
+        TokenDot _ -> 51#;
+        TokenEquals _ -> 52#;
+        TokenNotEquals _ -> 53#;
+        TokenLessThan _ -> 54#;
+        TokenGreaterThan _ -> 55#;
+        TokenLessThanEq _ -> 56#;
+        TokenGreaterThanEq _ -> 57#;
+        TokenLParen _ -> 58#;
+        TokenRParen _ -> 59#;
+        TokenLBracket _ -> 60#;
+        TokenRBracket _ -> 61#;
+        TokenLBrace _ -> 62#;
+        TokenRBrace _ -> 63#;
+        TokenNumber _ happy_dollar_dollar -> 64#;
+        TokenInteger _ happy_dollar_dollar -> 65#;
+        TokenPath _ happy_dollar_dollar -> 66#;
+        TokenString _ happy_dollar_dollar -> 67#;
+        TokenIdentifier _ happy_dollar_dollar -> 68#;
         _ -> -1#;
         }
 {-# NOINLINE happyTerminalToTok #-}
@@ -563,9 +779,9 @@ happyLex kend  _kmore []       = kend notHappyAtAll []
 happyLex _kend kmore  (tk:tks) = kmore (happyTerminalToTok tk) tk tks
 {-# INLINE happyLex #-}
 
-happyNewToken action sts stk = happyLex (\tk -> happyDoAction 66# notHappyAtAll action sts stk) (\i tk -> happyDoAction i tk action sts stk)
+happyNewToken action sts stk = happyLex (\tk -> happyDoAction 69# notHappyAtAll action sts stk) (\i tk -> happyDoAction i tk action sts stk)
 
-happyReport 66# tk explist resume tks = happyReport' tks explist resume
+happyReport 69# tk explist resume tks = happyReport' tks explist resume
 happyReport _ tk explist resume tks = happyReport' (tk:tks) explist (\tks -> resume (Happy_Prelude.tail tks))
 
 
@@ -597,65 +813,69 @@ happyReport' = (\tokens expected resume -> HappyIdentity Happy_Prelude.$ (parseE
 happyAbort :: () => [(Token)] -> (HappyIdentity a)
 happyAbort = Happy_Prelude.error "Called abort handler in non-resumptive parser"
 
-DslParser tks = happyRunIdentity happySomeParser where
+dslParser tks = happyRunIdentity happySomeParser where
  happySomeParser = happyThen (happyParse 0# tks) (\x -> case x of {HappyAbsSyn5 z -> happyReturn z; _other -> notHappyAtAll })
 
 happySeq = happyDontSeq
 
 
-type ColumnName = String
-type TableName = String
+parseError :: [Token] -> a
+parseError = error "oops something went wrong"
 
---condition for comparison stuff---
+type Ident = String
+
+data SelectStatement = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStatement) deriving (Show, Eq)
+ 
+data Distinct = Distinct deriving (Show, Eq)
+
+data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
+
+data Column = ColumnIdent Ident | ColumnByIndex Ident Int | ColumnByName Ident Ident deriving (Show, Eq)
+
+data TableName = TableAlias Ident Ident deriving (Show, Eq)
+
+-- Joins
+
+data JoinClause 
+    = InnerJoin Column
+    | LeftJoin Column
+    | RightJoin Column
+    | FullJoin Column
+    | InnerJoinC Column Condition
+    | LeftJoinC Column Condition
+    | RightJoinC Column Condition
+    | FullJoinC Column Condition
+    | CrossJoin Ident
+    deriving (Show, Eq)
+
 data Condition
-  = Equals ColumnName Value
-  | NotEq ColumnName Value
-  | LessThan ColumnName Value
-  | GreaterThan ColumnName Value
-  | LessThanEq ColumnName Value
-  | GreaterThanEq ColumnName Value
-  deriving (Show, Eq)
+    = Equals Column Value
+    | NotEquals Column Value
+    | LessThan Column Value
+    | GreaterThan Column Value
+    | LessThanEq Column Value
+    | GreaterThanEq Column Value
+    | InList Column [Value]
+    | Like Column String
+    | Between Column Value Value
+    deriving (Show, Eq)
 
--- types for the value of the comparison---
 data Value
-  = ValString String
-  | ValNumber Double
-  deriving (Show, Eq)
+    = ValString String
+    | ValInteger Int
+    | ValNumber Double
+    | ValIdent Ident
+    deriving (Show, Eq)
 
-data SelectQuery
-  = SelectStarColumns [TableName]                             
-  | SelectColumns [ColumnName] [TableName]                    
-  | SelectStarColumnsWhere [TableName] [Condition]           
-  | SelectColumnsWhere [ColumnName] [TableName] [Condition]   
-  | SelectStarColumnsOrder [TableName] OrderBy
-  | SelectColumnsOrder [ColumnName] [TableName] OrderBy
-  | SelectStarColumnsWhereOrder [TableName] [Condition] OrderBy
-  | SelectColumnsWhereOrder [ColumnName] [TableName] [Condition] OrderBy
-  deriving (Show, Eq)
+data OrderClause
+    = OrderByAsc Column
+    | OrderByDesc Column
+    deriving (Show, Eq)
 
-data OrderDirection = Asc | Desc
-  deriving (Show, Eq)
-
-data OrderBy = OrderBy ColumnName OrderDirection
-  deriving (Show, Eq)
-
-data Star = Star deriving (Show, Eq)
-
-data ArithmeticOperations = Add 
-                          | Minus
-                          |Multiply
-                          |Comma
-                          |Divide
-                          |Modulo
-                          deriving (Show, Eq)
-
-data ComparsionOperators = Equals
-                         | NotEq
-                         | LessThan
-                         | GreaterThan
-                         | LessThanEq
-                         | GreaterThanEq
-                         deriving (Show, Eq)
+data LimitClause
+    = Limit Int
+    | LimitOffset Int Int
+    deriving (Show, Eq)
 -- $Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp $
 
 #if !defined(__GLASGOW_HASKELL__)

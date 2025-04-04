@@ -45,7 +45,7 @@ tokens :-
   RIGHT           { \p s -> TokenRight p }
   FULL            { \p s -> TokenFull p }
   OUTER           { \p s -> TokenOuter p }
-  CROSS           { \p s -> TokenCrossJoin p }
+  CROSS           { \p s -> TokenCross p }
   ON              { \p s -> TokenOn p }
   -- Logical Operators
   AND            { \p s -> TokenAnd p }
@@ -59,6 +59,7 @@ tokens :-
   THEN           { \p s -> TokenThen p }
   ELSE           { \p s -> TokenElse p }
   END            { \p s -> TokenEnd p }
+  AS             { \p s -> TokenAs p }
   -- Essential arthimitic Operators
   "+"            { \p s -> TokenPlus p }
   "-"            { \p s -> TokenMinus p }
@@ -66,6 +67,7 @@ tokens :-
   ","            { \p s -> TokenComma p }
   "/"            { \p s -> TokenDivide p }
   "%"            { \p s -> TokenModulo p }
+  "."             { \p s -> TokenDot p }
   -- Comparison Operators
   "="            { \p s -> TokenEquals p }
   "!="           { \p s -> TokenNotEquals p }
@@ -81,18 +83,20 @@ tokens :-
   "{"            { \p s -> TokenLBrace p }
   "}"            { \p s -> TokenRBrace p }
   -- ===== Pattern Matching =====
+  -- An integer number
+  $digit+ { \p s -> TokenInteger p (read s) }
   -- A number
   $digit+(\.$digit+)? { \p s -> TokenNumber p (read s) }
-  -- A file name
-  [$alpha _][$alpha _ $digit]*"."[$alpha _ $digit]+ { \p s -> TokenFilename p s }
+  -- path to file
+  (\.\/|\.\.\/|\/)([a-zA-Z0-9_\-\.]+\/)*[a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+ {\p s -> TokenPath p s}
   -- A string
-  \"[$alpha $white \_ \- \, \. \? \[ \] \( \) \! \@ \$ \% \^ \& \* \+ \{ \} \` \~ $digit]*\" { \p s -> TokenString p (init (tail s)) }
+  \"([^\"\\]|\\.)*\"  { \p s -> TokenString p (read s) }
   -- An identifier
-  $alpha [$alpha $digit _]* { \p s -> TokenIdentifier p s }
+  [$alpha][$alpha $digit _ \-]* { \p s -> TokenIdentifier p s }
 
 {
 -- Note: Here's where the Haskell code starts with proper indentation
-data TokenM =
+data Token =
   TokenSelect AlexPosn   |
   TokenFrom AlexPosn      |
   TokenWhere AlexPosn     |
@@ -123,7 +127,7 @@ data TokenM =
   TokenRight AlexPosn     |
   TokenFull AlexPosn      |
   TokenOuter AlexPosn     |
-  TokenCrossJoin AlexPosn    |
+  TokenCross AlexPosn    |
   TokenOn AlexPosn        |
   TokenAnd AlexPosn       |
   TokenOr AlexPosn        |
@@ -135,12 +139,14 @@ data TokenM =
   TokenThen AlexPosn      |
   TokenElse AlexPosn      |
   TokenEnd AlexPosn       |
+  TokenAs AlexPosn |
   TokenPlus AlexPosn      |
   TokenMinus AlexPosn     |
   TokenMultiply AlexPosn  |
   TokenComma    AlexPosn  |
   TokenDivide AlexPosn    |
   TokenModulo AlexPosn    |
+  TokenDot AlexPosn |
   TokenEquals AlexPosn    |
   TokenNotEquals AlexPosn |
   TokenLessThan AlexPosn  |
@@ -153,13 +159,14 @@ data TokenM =
   TokenRBracket AlexPosn  |
   TokenLBrace AlexPosn    |
   TokenRBrace AlexPosn    |
+  TokenInteger AlexPosn Int | 
   TokenNumber AlexPosn Double | -- Changed from Num to Double
-  TokenFilename AlexPosn String |
+  TokenPath AlexPosn String |
   TokenString AlexPosn String |
   TokenIdentifier AlexPosn String
   deriving (Eq,Show)
 
-tokenPosn :: TokenM -> String
+tokenPosn :: Token -> String
 tokenPosn (TokenSelect (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenFrom (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenWhere (AlexPn _ l c)) = show l ++ ":" ++ show c
@@ -194,7 +201,7 @@ tokenPosn (TokenLeft (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenRight (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenFull (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOuter (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenCrossJoin (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenCross (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOn (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Logical Operators
@@ -210,14 +217,16 @@ tokenPosn (TokenWhen (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenThen (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenElse (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenEnd (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenAs (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Arithmetic Operators
 tokenPosn (TokenPlus (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenMinus (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenMultiply (AlexPn _ l c)) = show l ++ ":" ++ show c
---tokenPosn (TokenComma (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenComma (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenDivide (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenModulo (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenDot (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Comparison Operators
 tokenPosn (TokenEquals (AlexPn _ l c)) = show l ++ ":" ++ show c
@@ -236,8 +245,9 @@ tokenPosn (TokenLBrace (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenRBrace (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Missing handlers for the remaining token types
+tokenPosn (TokenInteger (AlexPn _ l c) _) = show l ++ ":" ++ show c
 tokenPosn (TokenNumber (AlexPn _ l c) _) = show l ++ ":" ++ show c
-tokenPosn (TokenFilename (AlexPn _ l c) _) = show l ++ ":" ++ show c
+tokenPosn (TokenPath (AlexPn _ l c) _) = show l ++ ":" ++ show c
 tokenPosn (TokenString (AlexPn _ l c) _) = show l ++ ":" ++ show c
 tokenPosn (TokenIdentifier (AlexPn _ l c) _) = show l ++ ":" ++ show c
 
