@@ -122,6 +122,7 @@ ColumnList:
 
 Column:
     Identifier {ColumnIdent $1}
+    | Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
     | Identifier "." Identifier {ColumnByName $1 $3}
 
@@ -212,7 +213,7 @@ data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnIdent Ident | ColumnByIndex Ident Int | ColumnByName Ident Ident deriving (Show, Eq)
+data Column = ColumnIdent Ident | ColumnByValue Value Ident | ColumnByIndex Ident Int | ColumnByName Ident Ident deriving (Show, Eq)
 
 data TableName = TableAlias Ident Ident deriving (Show, Eq)
 
