@@ -139,19 +139,21 @@ TableName:
 -- Joins
 
 OptJoin:
-    JOIN Column {Just (InnerJoin $2)}
-    | INNER JOIN Column {Just (InnerJoin $3)}
-    | LEFT JOIN Column {Just (LeftJoin $3)}
-    | RIGHT JOIN Column {Just (RightJoin $3)}
-    | FULL JOIN Column {Just (FullJoin $3)}
-    | JOIN Column ON Condition {Just (InnerJoinC $2 $4)}
-    | INNER JOIN Column ON Condition {Just (InnerJoinC $3 $5)}
-    | LEFT JOIN Column ON Condition {Just (LeftJoinC $3 $5)}
-    | RIGHT JOIN Column ON Condition {Just (RightJoinC $3 $5)}
-    | FULL JOIN Column ON Condition {Just (FullJoinC $3 $5)}
+    JOIN Identifier ON OnCondition {Just (InnerJoin $2 $4)}
+    | INNER JOIN Identifier ON OnCondition {Just (InnerJoin $3 $5)}
+    | LEFT JOIN Identifier ON OnCondition {Just (LeftJoin $3 $5)}
+    | RIGHT JOIN Identifier ON OnCondition {Just (RightJoin $3 $5)}
+    | FULL JOIN Identifier ON OnCondition {Just (FullJoin $3 $5)}
     | CROSS JOIN Identifier {Just (CrossJoin $3)}
     | {Nothing}
 
+OnCondition:
+    Column "=" Column             { ColEquals $1 $3 }
+    | Column "!=" Column            { ColNotEquals $1 $3 }
+    | Column "<" Column             { ColLessThan $1 $3 }
+    | Column ">" Column             { ColGreaterThan $1 $3 }
+    | Column "<=" Column            { ColLessThanEq $1 $3 }
+    | Column ">=" Column            { ColGreaterThanEq $1 $3 }
 
 -- Option Where
 OptWhere: WHERE ConditionList { Just $2 } | { Nothing }
@@ -161,6 +163,7 @@ ConditionList:
     Condition { [$1] } 
     | Condition AND ConditionList { $1 : $3 }
     | Condition OR ConditionList  { $1 : $3 }
+
 
 Condition: 
     Column "=" Value             { Equals $1 $3 }
@@ -172,6 +175,8 @@ Condition:
     | Column IN "(" ValueList ")"  { InList $1 $4 }
     | Column LIKE String           { Like $1 $3 }
     | Column BETWEEN Value AND Value { Between $1 $3 $5 }
+
+
 
 ValueList: 
     Value { [$1] } 
@@ -222,15 +227,20 @@ data TableName = TableAlias Ident Ident deriving (Show, Eq)
 -- Joins
 
 data JoinClause 
-    = InnerJoin Column
-    | LeftJoin Column
-    | RightJoin Column
-    | FullJoin Column
-    | InnerJoinC Column Condition
-    | LeftJoinC Column Condition
-    | RightJoinC Column Condition
-    | FullJoinC Column Condition
+    = InnerJoin Ident OnCondition
+    | LeftJoin Ident OnCondition
+    | RightJoin Ident OnCondition
+    | FullJoin Ident OnCondition
     | CrossJoin Ident
+    deriving (Show, Eq)
+
+data OnCondition
+    = ColEquals Column Column
+    | ColNotEquals Column Column
+    | ColLessThan Column Column
+    | ColGreaterThan Column Column
+    | ColLessThanEq Column Column
+    | ColGreaterThanEq Column Column
     deriving (Show, Eq)
 
 data Condition

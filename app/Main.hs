@@ -17,22 +17,19 @@ main = do
 toIO :: a -> IO a
 toIO x = return x
 
---interpreter :: SelectStatement -> SelectStatement
 
-interpreter stmt | isJust joins = withJoinEval j distinct files
-where 
-stmt = (Select distinct cols files joins conds order limit union)
-justJoin = Just j
+-- interpreter stmt | isJust joins = withJoinEval j distinct files
+-- where 
+-- stmt = (Select distinct cols files joins conds order limit union)
+-- justJoin = Just j
 
-withJoinEval _ Nothing _ = 
-withJoinEval (CrossJoin s) distinct files =
-withJoinEval (LeftJoin col)
-withJoinEval (RightJoin col)
-withJoinEval (FullJoin col)
-withJoinEval (InnerJoinC col cond)
-withJoinEval (LeftJoinC col cond)
-withJoinEval (RightJoinC col cond)
-withJoinEval (FullJoinC col cond)
+-- withJoinEval _ Nothing _ = 
+-- withJoinEval (InnerJoin col cond) distinct files =
+-- withJoinEval (LeftJoin col cond)
+-- withJoinEval (RightJoin col cond)
+-- withJoinEval (FullJoin col cond)
+-- withJoinEval (CrossJoin s) 
+
 
 
 
