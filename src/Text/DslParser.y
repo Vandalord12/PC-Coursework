@@ -208,6 +208,7 @@ parseError = error "oops something went wrong"
 
 type Ident = String
 
+
 data SelectStatement = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStatement) deriving (Show, Eq)
  
 data Distinct = Distinct deriving (Show, Eq)
