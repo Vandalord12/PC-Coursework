@@ -205,7 +205,6 @@ OptUnion:
     | {Nothing}
 
 
-
 {
 
 parseError :: [Token] -> a
