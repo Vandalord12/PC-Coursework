@@ -38,7 +38,7 @@ library:
       happy:happy
 
 executables:
-  program-run:
+   cql: # program-run:
     main:        Main.hs
     source-dirs: app
     ghc-options:

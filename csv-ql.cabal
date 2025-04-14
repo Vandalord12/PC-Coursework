@@ -25,6 +25,8 @@ source-repository head
 
 library
   exposed-modules:
+      Interpreter.Csv
+      Interpreter.Evaluater
       Text.DslParser
       Text.Lexer
   other-modules:
@@ -42,7 +44,7 @@ library
     alex:alex,
     happy:happy
 
-executable program-run
+executable cql
   main-is: Main.hs
   other-modules:
       Paths_csv_ql

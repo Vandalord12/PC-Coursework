@@ -1,4 +1,4 @@
-module Csv where
+module Interpreter.Csv where
 
 import Data.Char (isSpace)
 import System.IO (readFile)
@@ -36,8 +36,7 @@ readCSV :: FilePath -> IO Table
 readCSV path = do
   contents <- readFile path
   let allLines = lines contents                 -- Split file into lines
-      nonEmptyLines = filter (not . null) allLines  -- Skip blank lines
-      parsed = map parseRow nonEmptyLines       -- Parse each line into a Row
+      parsed = map parseRow allLines       -- Parse each line into a Row
   return parsed
 
 
@@ -61,19 +60,19 @@ unquote s
   | otherwise = s
 
 
-getColumnByIndex :: FilePath -> Int -> IO [String]
-getColumnByIndex fileName index = do
-  contents <- readCSV fileName
-  let output = getColByIndex contents index
-  return output
-  where
-    getColByIndex :: Table -> Int -> [String]
-    getColByIndex [] _ = []
-    getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
+-- getColumnByIndex :: FilePath -> Int -> IO [String]
+-- getColumnByIndex fileName index = do
+--   contents <- readCSV fileName
+--   let output = getColByIndex contents index
+--   return output
+--   where
+--     getColByIndex :: Table -> Int -> [String]
+--     getColByIndex [] _ = []
+--     getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
 
-getRowByIndex :: String -> Int -> IO [String]
-getRowByIndex
-getSpecificValue :: String -> Int -> Int -> [String]
+-- getRowByIndex :: String -> Int -> IO [String]
+-- getRowByIndex
+-- getSpecificValue :: String -> Int -> Int -> [String]
 
-columnFinder :: Column -> [String]
-columnFiner (ColumnByIndex tbl num) = do 
+-- columnFinder :: Column -> [String]
+-- columnFiner (ColumnByIndex tbl num) = do 

@@ -30,8 +30,9 @@ BETWEEN        {TokenBetween _}
 UNION          {TokenUnion _}
 INTERSECT      {TokenIntersect _}
 EXCEPT         {TokenExcept _}
+LEFTMERGE      {TokenLeftMerge _ }
 INSERT         {TokenInsert _}
-INTO          {TokenInto _}
+INTO           {TokenInto _}
 VALUES         {TokenValues _}
 UPDATE         {TokenUpdate _}
 SET            {TokenSet _}
@@ -104,7 +105,7 @@ Identifier   { TokenIdentifier _ $$ }
 -------------------------------
 
 SelectStmt
-    : SELECT OptDistinct Columns FROM TableList OptJoin OptWhere OptOrderBy OptLimit OptUnion       { Select $2 $3 $5 $6 $7 $8 $9 $10 }
+    : SELECT OptDistinct Columns FROM TableList OptJoin OptWhere OptOrderBy OptLimit OptUnion OptLeftMerge  { Select $2 $3 $5 $6 $7 $8 $9 $10 $11}
 
 -- Full grammar statement. Its been simplified for simplicity:
 -- : SELECT OptDistinct ColumnList FROM TableList OptJoin OptWhere OptGroupBy OptHaving OptOrderBy OptLimit OptUnion    
@@ -134,7 +135,8 @@ TableList:
     | TableName ',' TableList {$1 : $3}
 
 TableName:
-    FilePath AS Identifier {TableAlias $1 $3}
+    String AS Identifier {TableAlias $1 $3}
+    --I trid the token FilePath in here and it did not work i got this error cql: oops something went wrong so i converted it to String it worked
 
 -- Joins
 
@@ -204,6 +206,10 @@ OptUnion:
     UNION SelectStmt {Just $2}
     | {Nothing}
 
+    OptLeftMerge:
+    LEFTMERGE { Just LeftMerge }
+  |            { Nothing }
+
 
 {
 
@@ -213,7 +219,7 @@ parseError = error "oops something went wrong"
 type Ident = String
 
 
-data SelectStatement = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStatement) deriving (Show, Eq)
+data SelectStatement = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStatement) (Maybe MergeMode) deriving (Show, Eq)
  
 data Distinct = Distinct deriving (Show, Eq)
 
@@ -270,5 +276,9 @@ data LimitClause
     = Limit Int
     | LimitOffset Int Int
     deriving (Show, Eq)
+
+
+data MergeMode = LeftMerge deriving (Show, Eq)
+
 
 }
