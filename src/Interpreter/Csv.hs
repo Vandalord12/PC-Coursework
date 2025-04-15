@@ -60,15 +60,16 @@ unquote s
   | otherwise = s
 
 
--- getColumnByIndex :: FilePath -> Int -> IO [String]
--- getColumnByIndex fileName index = do
---   contents <- readCSV fileName
---   let output = getColByIndex contents index
---   return output
---   where
---     getColByIndex :: Table -> Int -> [String]
---     getColByIndex [] _ = []
---     getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
+getColumnByIndex :: FilePath -> Int -> IO [String]
+getColumnByIndex filePath index = do
+  contents <- readCSV filePath
+  let output = getColByIndex contents index
+  return output
+  where
+    -- Collates all the values in the column
+    getColByIndex :: Table -> Int -> [String]
+    getColByIndex [] _ = []
+    getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
 
 -- getRowByIndex :: String -> Int -> IO [String]
 -- getRowByIndex
@@ -76,3 +77,11 @@ unquote s
 
 -- columnFinder :: Column -> [String]
 -- columnFiner (ColumnByIndex tbl num) = do 
+
+
+-- Will do this later
+-- checkColumnNames :: FilePath -> IO Bool
+-- checkColumnNames fileName = do
+--   contents <- readCSV fileName
+--   let firstRow = head contents
+--   case 

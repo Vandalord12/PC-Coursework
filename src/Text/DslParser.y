@@ -219,7 +219,7 @@ parseError = error "oops something went wrong"
 type Ident = String
 
 
-data SelectStatement = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStatement) (Maybe MergeMode) deriving (Show, Eq)
+data SelectStmt = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) (Maybe MergeMode) deriving (Show, Eq)
  
 data Distinct = Distinct deriving (Show, Eq)
 
