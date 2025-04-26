@@ -6,7 +6,7 @@ import Data.Maybe (mapMaybe)
 type IndexPair = (Int, Int)
 
 
-evaluate :: SelectStatement -> IO Table
+evaluate :: SelectStmt -> IO Table
 -- Handles the Cartesian product task1 query  
 evaluate (Select _ SelectAllColumns tableList Nothing _ _ _ _ _) = do
   tables <- mapM loadTable tableList

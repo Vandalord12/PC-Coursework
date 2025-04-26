@@ -89,7 +89,7 @@ tokens :-
   -- A number
   $digit+(\.$digit+)? { \p s -> TokenNumber p (read s) }
   -- path to file
-  (\.\/|\.\.\/|\/)([a-zA-Z0-9_\-\.]+\/)*[a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+ {\p s -> TokenPath p s}
+  (\.\/|\.\.\/|\/)([a-zA-Z0-9_\-\.]+\/)*[a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+ {\p s -> TokenPath p (show s)}
   -- A string
   \"([^\"\\]|\\.)*\"  { \p s -> TokenString p (read s) }
   -- An identifier

@@ -105,7 +105,7 @@ Identifier   { TokenIdentifier _ $$ }
 -------------------------------
 
 SelectStmt
-    : SELECT OptDistinct Columns FROM TableList OptJoin OptWhere OptOrderBy OptLimit OptUnion OptLeftMerge  { Select $2 $3 $5 $6 $7 $8 $9 $10 $11}
+    : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion OptLeftMerge  { Select $2 $3 $5 $6 $7 $8 $9 $10 $11}
 
 -- Full grammar statement. Its been simplified for simplicity:
 -- : SELECT OptDistinct ColumnList FROM TableList OptJoin OptWhere OptGroupBy OptHaving OptOrderBy OptLimit OptUnion    
@@ -123,31 +123,30 @@ ColumnList:
     | Column ',' ColumnList {$1 : $3}
 
 Column:
-    Identifier {ColumnIdent $1}
-    | Value AS Identifier {ColumnByValue $1 $3}
+    Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
-    | Identifier "." Identifier {ColumnByName $1 $3}
 
-
--- Table List
-TableList: 
-    TableName {[$1]} 
-    | TableName ',' TableList {$1 : $3}
 
 TableName:
-    String AS Identifier {TableAlias $1 $3}
+    FilePath AS Identifier {TableAlias $1 $3}
     --I trid the token FilePath in here and it did not work i got this error cql: oops something went wrong so i converted it to String it worked
 
 -- Joins
+OptJoins:
+    JoinList {Just $1} | { Nothing }
 
-OptJoin:
-    JOIN Identifier ON OnCondition {Just (InnerJoin $2 $4)}
-    | INNER JOIN Identifier ON OnCondition {Just (InnerJoin $3 $5)}
-    | LEFT JOIN Identifier ON OnCondition {Just (LeftJoin $3 $5)}
-    | RIGHT JOIN Identifier ON OnCondition {Just (RightJoin $3 $5)}
-    | FULL JOIN Identifier ON OnCondition {Just (FullJoin $3 $5)}
-    | CROSS JOIN Identifier {Just (CrossJoin $3)}
-    | {Nothing}
+
+JoinList:
+    Join {[$1]}
+    | Join JoinList {$1 : $2}
+
+Join:
+    JOIN TableName ON OnCondition {InnerJoin $2 $4}
+    | INNER JOIN TableName ON OnCondition {InnerJoin $3 $5}
+    | LEFT JOIN TableName ON OnCondition {LeftJoin $3 $5}
+    | RIGHT JOIN TableName ON OnCondition {RightJoin $3 $5}
+    | FULL JOIN TableName ON OnCondition {FullJoin $3 $5}
+    | CROSS JOIN TableName {CrossJoin $3}
 
 OnCondition:
     Column "=" Column             { ColEquals $1 $3 }
@@ -175,8 +174,9 @@ Condition:
     | Column "<=" Value            { LessThanEq $1 $3 }
     | Column ">=" Value            { GreaterThanEq $1 $3 }
     | Column IN "(" ValueList ")"  { InList $1 $4 }
-    | Column LIKE String           { Like $1 $3 }
     | Column BETWEEN Value AND Value { Between $1 $3 $5 }
+    --| Column LIKE String           { Like $1 $3 }
+    
 
 
 
@@ -206,8 +206,8 @@ OptUnion:
     UNION SelectStmt {Just $2}
     | {Nothing}
 
-    OptLeftMerge:
-    LEFTMERGE { Just LeftMerge }
+OptLeftMerge:
+  LEFTMERGE { Just LeftMerge }
   |            { Nothing }
 
 
@@ -219,24 +219,24 @@ parseError = error "oops something went wrong"
 type Ident = String
 
 
-data SelectStmt = Select (Maybe Distinct) Columns [TableName] (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) (Maybe MergeMode) deriving (Show, Eq)
+data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) (Maybe MergeMode) deriving (Show, Eq)
  
 data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnIdent Ident | ColumnByValue Value Ident | ColumnByIndex Ident Int | ColumnByName Ident Ident deriving (Show, Eq)
+data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int deriving (Show, Eq)
 
-data TableName = TableAlias Ident Ident deriving (Show, Eq)
+data TableName = TableAlias FilePath Ident deriving (Show, Eq)
 
 -- Joins
 
 data JoinClause 
-    = InnerJoin Ident OnCondition
-    | LeftJoin Ident OnCondition
-    | RightJoin Ident OnCondition
-    | FullJoin Ident OnCondition
-    | CrossJoin Ident
+    = InnerJoin TableName OnCondition
+    | LeftJoin TableName OnCondition
+    | RightJoin TableName OnCondition
+    | FullJoin TableName OnCondition
+    | CrossJoin TableName
     deriving (Show, Eq)
 
 data OnCondition
@@ -256,7 +256,6 @@ data Condition
     | LessThanEq Column Value
     | GreaterThanEq Column Value
     | InList Column [Value]
-    | Like Column String
     | Between Column Value Value
     deriving (Show, Eq)
 
