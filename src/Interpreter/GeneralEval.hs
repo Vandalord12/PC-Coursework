@@ -52,20 +52,7 @@ helperSelectStmt rows joins conds order _ =
   where
   j = map (fst) joins
 
-applyJoins :: [[String]] -> [[(Int, Int)]] -> [[String]]
-applyJoins rows [] = rows
-applyJoins rows (as:ass) = applyJoins ([rows !! index | index <- (map (fst) as)]) ass
 
-applyConditions :: [[String]] -> [[Int]] -> [[String]]
-applyConditions rows (as:ass) = applyConditions ([rows !! index | index <- as]) ass
-  
-applyOrder :: [[String]] -> [(Int,Int)] -> [[String]]
-applyOrder rows as = [rows !! place | (_,place) <- as]
-
-
-
-putTogether :: [[a]] -> [a] -> [a]
-puTogther ass = nub ( foldr (++) [] ass )
 
 -- Evaluates all the columns
 evalColumns :: Columns -> TableName -> [JoinClause] -> IO [[String]]
@@ -162,11 +149,18 @@ helperJoin rawls rawrs f "Full" = fullJoin (zip [0..] rawls) (zip [0..] rawrs) f
 helperJoin rawls rawrs _ "Cross" = crossJoin (zip [0..] rawls) (zip [0..] rawrs)
 
 
+
+
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 leftJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 leftJoin [] _ _ = []
 leftJoin ((index,val):ls) rs f = [(index, check val val2 i f) | (i, val2) <- rs] ++ (leftJoin ls rs f)
 
+
+leftJoin :: Table -> Table -> JoinClause ->  (String -> String -> Bool) -> Table
+rightJoin :: Table -> Table -> JoinClause ->  (String -> String -> Bool) -> Table
+fullJoin :: Table -> Table -> JoinClause ->  (String -> String -> Bool) -> Table
+crossJoin :: Table -> Table -> JoinClause ->  (String -> String -> Bool) -> Table
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 rightJoin ::[(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
