@@ -26,6 +26,7 @@ source-repository head
 library
   exposed-modules:
       Interpreter.Csv
+      Interpreter.Evaluater
       Interpreter.GeneralEval
       Text.DslParser
       Text.Lexer
