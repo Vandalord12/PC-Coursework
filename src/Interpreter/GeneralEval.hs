@@ -16,39 +16,98 @@ type TableDataList = [TableData]
 type TableData = ((Ident,FilePath),Table)
 
 
+-- evaluate the select statement by chaining together all the possible table operations
+evalSelectStmt :: SelectStmt -> IO Table
+evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion _) = do
+  let (tableId, filePath) = evalTableName tbl
+  initialTable <- readCSV filePath
+  let tableDataList =  ((tableId, filePath),initialTable):[]
 
--- -- Evaluates all the columns
--- evalColumns :: Columns -> TableName -> [JoinClause] -> IO [[String]]
--- evalColumns cols tbl jcs = case cols of
---     (SelectAllColumns) -> allColumns tbl
---     (SelectColumns cs) -> selectedColumns cs tbl jcs
+  joinsTDL <- case optJcs of
+    Just jcs -> evalJoins jcs tableDataList
+    Nothing -> return tableDataList
+  
+  let condsTDL = case optConds of
+    Just conds -> evalConditions conds joinsTDL
+    Nothing -> joinsTDL
 
+  let orderTDL = case optOrd of
+    Just orderc -> evalOrderBy orderc condsTDL
+    Nothing -> condsTDL
+  
+  let limitTDL = case optLimit of
+    Just limit -> evalLimit limit orderTDL
+    Nothing -> orderTDL
 
--- -- Helper function to evalColumns
--- allColumns :: TableName -> IO [[String]]
--- allColumns tbl = do
+  let colsTable = evalColumns cols limitTDL
 
---   let (filePath,_) = evalTableName tbl
+  let distTable = case optDist of
+    Just _ -> evalDistinct colsTable
+    Nothing -> colsTable
 
---   allCols <- readCSV filePath
---   return allCols
+  let unionTable = case optUnion of
+    Just sstmt -> evalUnion distTable sstmt
+    Nothing -> distTable
 
--- -- Helper function to evalColumns
--- selectedColumns :: [Column] -> TableName -> [JoinClause] -> IO [[String]]
--- selectedColumns [] _ _ = return []
--- selectedColumns (col:cols) tbl jcs = do
---   evaledColumn <- topLvlEvalColumn col tbl jcs
---   rest <- selectedColumns cols tbl jcs
---   return (evaledColumn : rest)
+  return unionTable
   
 
 
 
 
+
+
+
+
+
+
+-- Evaluates all the columns
+evalColumns :: Columns -> TableDataList -> Table
+evalColumns cols tds jcs = case cols of
+    (SelectAllColumns) -> allColumns tds
+    (SelectColumns cs) -> transpose (selectedColumns cs tds)
+
+-- Helper function to evalColumns
+allColumns :: TableDataList -> Table
+allColumns tds = combineTables tbls
+  where
+  tbls = map (snd) tds
+
+-- same funcition as the cartesion one in evaluator
+combineTables :: [Table] -> Table
+combineTables [] = [[]]
+combineTables (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- combineTables ts]
+
+-- Helper function to evalColumns
+selectedColumns :: [Column] -> TableDataList -> Table 
+selectedColumns [] _ = []
+selectedColumns (col:cols) tds = extractedCol:selectedColumns cols tds
+  where
+  extractedCol = case (extractColumn col) of 
+      (value, -1) -> replicate (length (snd $ head tds)) value
+      (ident, colIndex) ->  getColumn ident colIndex tds
+
+
+evalDistinct :: Table -> Table
+evalDistinct tbl = nub tbl
+
+evalUnion :: Table -> SelectStmt -> Table
+evalUnion tbl stmt = combineTables tbl (evalSelectStmt stmt)
+
+
+
+
+
+
+
+
+
+
+
 -- Evaluate all the join clauses by feeding the output of one into the next
-evalJoins :: TableDataList -> [JoinClause] -> IO TableDataList
-evaledJoin _ [] = []
-evalJoins tds (j:js) = evalJoins (evalJoin tds j) js
+evalJoins :: [JoinClause] -> TableDataList -> IO TableDataList
+evaledJoin [] _ = []
+evalJoins (j:js) tds = evalJoins (evalJoin tds j) js
 
 
 -- Splits the components of the JoinClause into its most basic parts
@@ -69,7 +128,7 @@ evalJoin tds jc = do
 
 
   let (joinType, tableName, onCond) = extractJoin jc
-  let (filePath,tableIdent) = evalTableName tableName -- get the tables info
+  let (tableIdent,filePath) = evalTableName tableName -- get the tables info
 
   let alreadyExists = any (\((id,fp),_) -> (id == tableIdent) || (fp == filePath)) tds -- checks if table already in tds
 
@@ -84,8 +143,6 @@ evalJoin tds jc = do
   let joinedTblsData = helperJoin newTblsData joinType tableIdent condFunc leftCol rightCol -- send to helperJoin todo the rest 
 
   return joinedTblsData
-
-
 
 
 -- Continues evaluating the join
@@ -113,8 +170,6 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
     resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
     
 
-
-
 getTableById :: Ident -> TableDataList -> Table
 getTableById id [] = error ("Table Identifier: " ++ id ++ " does not exist")
 getTableById id (((ident,_),tbl):tds) | id == ident = tbl
@@ -130,11 +185,12 @@ evalOnCondition (ColGreaterThan col1 col2) = ((>),(col1,col2))
 evalOnCondition (ColLessThanEq col1 col2) = ((<=),(col1,col2))
 evalOnCondition (ColGreaterThanEq col1 col2) = ((>=),(col1,col2))
 
+
+
 -- Custom check to see if two values satisfy a condition. The row index if true, and -1 if false
 check :: String -> String -> Int -> (String -> String -> Bool) -> Int
 check val1 val2 index f | f val1 val2 = index
                         | otherwise = -1
-
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 innerJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
@@ -145,23 +201,18 @@ leftJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> 
 leftJoin [] _ _ = []
 leftJoin ((leftI,leftVal):ls) rs f = [(leftI, check leftVal rightVal rightI f) | (rightI, rightVal) <- rs] ++ (leftJoin ls rs f)
 
-
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 rightJoin ::[(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 rightJoin _ [] _ = []
 rightJoin ls ((rightI,rightVal):rs) f = [(rightI,check rightVal leftVal leftI f) | (leftI, leftVal) <- ls] ++ (rightJoin ls rs f)
 
-
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 fullJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 fullJoin ls rs f = nub $ (leftJoin ls rs f) ++ (rightJoin ls rs f)
 
-
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 crossJoin :: [(Int, String)] -> [(Int, String)] -> [(Int,Int)]
 crossJoin ls rs = [(i1,i2) | (i1,_) <- ls, (i2,_) <- rs]
-
-
 
 
 -- Iterates over the matching rows and makes a new table data list based on it
@@ -202,6 +253,95 @@ updateTblsData row ident (((id,fp),tbl):tds) | id == ident = (((id,fp),added):td
 
 
 
+
+
+-- Evaluates all the conditions how it works:
+-- Filters rows from the Cartesian product that satisfy all conditions.
+evalConditions :: [Condition] -> TablesData -> Table
+evalConditions conds tablesData  =
+  filter (\row -> all (\cond -> rowSatisfies row cond tablesData) conds) fullRows
+  where
+    allTables = map snd tablesData
+    fullRows  = cartesianProduct allTables
+
+-- Generates all row combinations from multiple tables
+cartesianProduct :: [Table] -> Table
+cartesianProduct [] = [[]]
+cartesianProduct (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- cartesianProduct ts]
+
+
+-- Checks whether a combined row satisfies a given condition, using correct table slices by alias.
+rowSatisfies :: Row -> Condition -> TablesData -> Bool
+rowSatisfies fullRow cond tablesData =
+  case cond of
+    Equals col val        -> compareValue (getValue col) val (==)
+    NotEquals col val     -> compareValue (getValue col) val (/=)
+    LessThan col val      -> compareValue (getValue col) val (<)
+    GreaterThan col val   -> compareValue (getValue col) val (>)
+    LessThanEq col val    -> compareValue (getValue col) val (<=)
+    GreaterThanEq col val -> compareValue (getValue col) val (>=)
+    InList col vals       -> any (\v -> compareValue (getValue col) v (==)) vals
+    Between col v1 v2     -> compareValue (getValue col) v1 (>=) &&
+                             compareValue (getValue col) v2 (<=)
+  where
+    -- Associate each alias with its chunk of the flat row
+    tableSlices :: [(Ident, Row)]
+    tableSlices = splitRowByTables fullRow tablesData
+
+    -- Lookup the correct value from the correct table slice
+    getValue :: Column -> String
+    getValue (ColumnByIndex alias idx) =
+      case lookup alias tableSlices of
+        Just subRow -> safeIndex idx subRow
+        Nothing     -> error $ "Alias '" ++ alias ++ "' not found in row."
+    getValue (ColumnByValue val _) = evalValue val
+
+
+-- Splits a flat cartesian row into slices corresponding to each table's alias.
+splitRowByTables :: Row -> TablesData -> [(Ident, Row)]
+splitRowByTables row tables = go row tables []
+  where
+    go [] [] acc = reverse acc
+    go r (((alias, _), t):ts) acc =
+      let n = if null t then 0 else length (head t)
+          (chunk, rest) = splitAt n r
+      in go rest ts ((alias, chunk):acc)
+    go _ _ _ = error "Row and tables mismatch"
+
+-- Get the value at the given index and returns empty string if index out of bounds
+safeIndex :: Int -> [String] -> String
+safeIndex i xs = if i < length xs then xs !! i else ""
+
+-- compares a string with a Value using the given comparison operator, returning False if types don’t match.
+compareValue :: String -> Value -> (forall a. Ord a => a -> a -> Bool) -> Bool
+compareValue s v op = case compareVal s v op of
+  Just b  -> b
+  Nothing -> False
+
+
+-- Compares a string with a value within in the Maybe context
+compareVal :: String -> Value -> (forall a. Ord a => a -> a -> Bool) -> Maybe Bool
+compareVal colStr value f = 
+  case value of
+    ValInteger num -> do
+      parsed <- readMaybe colStr :: Maybe Int
+      return $ f parsed num
+    ValNumber num -> do
+      parsed <- readMaybe colStr :: Maybe Double
+      return $ f parsed num
+    ValString str ->
+      return $ f colStr str
+    ValIdent ident ->
+      return $ f colStr ident
+
+
+
+
+
+
+
+
+
 extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
 extractColumn (ColmnByValue val ident) = (evalValue val, -1)
@@ -216,152 +356,7 @@ evalValue (ValIdent ident) = ident
 
 
 -- Evaluates the TableNames into a more suitable structure
-evalTableName :: TableName -> (FilePath,Ident)
-evalTableName (TableAlias filePath ident) = (filePath,ident)
+evalTableName :: TableName -> (Ident,FilePath)
+evalTableName (TableAlias filePath ident) = (ident,filePath)
 
-
-
--- Evaluates all the conditions
--- evalConditions :: [Condition] -> TableName -> [JoinClause] -> IO [[Int]]
--- evalConditions [] _ _ = return []
--- evalConditions (c:cs) tbl jcs = do
---   evaledCond <- evalCondition c tbl jcs
---   rest <- evalConditions cs tbl jcs
---   return (evaledCond : rest)
-
-
--- -- Evaluates the Condition, and gives back the indexes (row numbers) that satify the condition
--- evalCondition :: Condition -> TableName -> [JoinClause] -> IO [Int]
--- evalCondition (Equals column val) tbl jcs = fmap (\x -> helperCondition (==) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (NotEquals column val) tbl jcs = fmap (\x -> helperCondition (/=) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (LessThan column val) tbl jcs = fmap (\x -> helperCondition (<) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (GreaterThan column val) tbl jcs = fmap (\x -> helperCondition (>) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (LessThanEq column val) tbl jcs = fmap (\x -> helperCondition (<=) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (GreaterThanEq column val) tbl jcs = fmap (\x -> helperCondition (>=) (zip [0..] x) val) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (InList column vals) tbl jcs = fmap (\x -> helperInListCondition (zip [0..] x) vals) (topLvlEvalColumn column tbl jcs)
-
--- evalCondition (Between column val1 val2) tbl jcs = fmap (\x -> helperBetween (zip [0..] x) val1 val2) (topLvlEvalColumn column tbl jcs)
-
-
-
-
-
-
--- -- Applies the inList condition to all values in the column. Gives back a list of the indexes that satisfy the condition
--- helperInListCondition :: [(Int,String)] -> [Value] -> [Int]
--- helperInListCondition [] _ = []
--- helperInListCondition ((index,colStr):as) vs | inValueList colStr vs = index:helperInListCondition as vs
---                                              | otherwise = helperInListCondition as vs
---   where
-
---   inValueList :: String -> [Value] -> Bool
---   inValueList _ [] = False 
---   inValueList colStr (v:vs) | pureCompare colStr v (==) = True
---                             | otherwise = inValueList colStr vs
-
-
-
-
-
--- -- Applies the inBetween condition to all values in the column. Gives back a list of the indexes that satisfy the condition
--- helperBetween :: [(Int,String)] -> Value -> Value -> [Int]
--- helperBetween [] _ _ = []
--- helperBetween ((index,colStr):as) v1 v2 | comp1 && comp2 = index:helperBetween as v1 v2
---                                         | otherwise = helperBetween as v1 v2
-  
---   where
---   comp1 = pureCompare colStr v1 (>=)
---   comp2 = pureCompare colStr v2 (<=)
-    
-
-
-
-
--- -- Applies the given condition to all values in the column. Gives back a list of the indexes that satisfy the condition
--- helperCondition :: (forall a. Ord a => a -> a -> Bool) -> [(Int,String)] -> Value -> [Int]
--- helperCondition _ [] _ = []
--- helperCondition f ((index,colStr):as) value | pureCompare colStr value f = index:(helperCondition f as value)
---                                             | otherwise = helperCondition f as value
-  
-
--- -- Gives back the non-monadic version of the compareVal ie. the pure boolean value
--- pureCompare ::  String -> Value -> (forall a. Ord a => a -> a -> Bool) -> Bool
--- pureCompare str val f = b
---   where
---   mb = compareVal str val f
---   b = case mb of
---     Nothing -> error "Non-matching types"
---     (Just bool) -> bool
-  
-
--- -- Compares a string with a value within in the Maybe context
--- compareVal :: String -> Value -> (forall a. Ord a => a -> a -> Bool) -> Maybe Bool
--- compareVal colStr value f = 
---   case value of
---     ValInteger num -> do
---       parsed <- readMaybe colStr :: Maybe Int
---       return $ f parsed num
---     ValNumber num -> do
---       parsed <- readMaybe colStr :: Maybe Double
---       return $ f parsed num
---     ValString str ->
---       return $ f colStr str
---     ValIdent ident ->
---       return $ f colStr ident
-
-
-
-
-
--- -- :: OrderClause -> [(ordered row index, prev row index)]
--- evalOrderBy :: OrderClause -> TableName -> [JoinClause] -> IO [(Int,Int)]
--- evalOrderBy (OrderByAsc col) tbl jcs = fmap (\c -> helperOrderBy c True) (topLvlEvalColumn col tbl jcs)
--- evalOrderBy (OrderByDesc col) tbl jcs = fmap (\c -> helperOrderBy c False) (topLvlEvalColumn col tbl jcs)
-
-
-
--- -- Orders 
--- helperOrderBy :: [String] -> Bool -> [(Int,Int)]
--- helperOrderBy column isAsc | isAsc = zip [0..] [new | (new,_) <- (sortBy (comparing snd) (zip [0..] column))]
---                            | otherwise = zip [0..] [new | (new,_) <- (sortBy (comparing (Down . snd)) (zip [0..] column))]
-
-
--- -- :: LimitClause -> (Offset, Number of Rows)
--- evalLimit :: LimitClause -> (Int,Int)
--- evalLimit (Limit num) = (0,num)
--- evalLimit (LimitOffset offset num) = (offset,num)
-
-
-
-
--- -- evalColumn used by the higher lvl functions 
--- topLvlEvalColumn :: Column -> TableName -> [JoinClause] -> IO ([String])
--- topLvlEvalColumn col tbl jcs = do
---   let ident = (case col of
---                 (ColumnByIndex id _) -> id
---                 (ColumnByValue _ id) -> id)
-
---   let tbls = getTables (evalTableName tbl) jcs
---   let tblToBeEvaluated = findTable ident tbls
-
---   evalColumn col tblToBeEvaluated
-
-
--- -- Find the table belonging to the identity
--- findTable :: Ident -> [(FilePath,Ident)] -> TableName
--- findTable _ [] = error "Table of that identity does not exist"
--- findTable id ((fp,ident):ts) | id == ident = TableAlias fp ident
---                              | otherwise = findTable id ts
-
--- -- Evaluates a Column into a more suitable structure
--- evalColumn :: Column -> TableName -> IO ([String])
--- evalColumn (ColumnByIndex ident index) tbl = do
---   let (filePath,ident) = evalTableName tbl
---   getColumnByIndex filePath index
   
