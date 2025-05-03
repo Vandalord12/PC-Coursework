@@ -9,6 +9,8 @@ import Data.List
 import Data.Ord 
 
 
+type TableSlices = [(Ident, Row)]
+
 type TableDataList = [TableData]
 
 type TableData = ((Ident,FilePath),Table)
@@ -19,35 +21,35 @@ evalSelectStmt :: SelectStmt -> IO Table
 evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion) = do
   let (tableId, filePath) = evalTableName tbl
   initialTable <- readCSV filePath
-  let tableDataList =  ((tableId, filePath),initialTable):[]
+  let tableDataList = [((tableId, filePath), initialTable)]
 
   joinsTDL <- case optJcs of
     Just jcs -> evalJoins jcs tableDataList
-    Nothing -> return tableDataList
-  
-  -- let condsTDL = case optConds of
-  --   Just conds -> evalConditions conds joinsTDL
-  --   Nothing -> joinsTDL
+    Nothing  -> return tableDataList
 
-  -- let orderTDL = case optOrd of
-  --   Just orderc -> evalOrderBy orderc condsTDL
-  --   Nothing -> condsTDL
-  
-  -- let limitTDL = case optLimit of
-  --   Just limit -> evalLimit limit orderTDL
-  --   Nothing -> orderTDL
+  let condsTDL = case optConds of
+        Just conds -> evalConditions joinsTDL conds
+        Nothing    -> joinsTDL
 
-  let colsTable = evalColumns cols joinsTDL
+  let orderTDL = case optOrd of
+        Just orderc -> evalOrderBy orderc condsTDL
+        Nothing     -> condsTDL
 
-  -- let distTable = case optDist of
-  --   Just _ -> evalDistinct colsTable
-  --   Nothing -> colsTable
+  let limitTDL = case optLimit of
+        Just limit -> evalLimit limit orderTDL
+        Nothing    -> orderTDL
 
-  -- let unionTable = case optUnion of
-  --   Just sstmt -> evalUnion distTable sstmt
-  --   Nothing -> distTable
+  let colsTable = evalColumns cols limitTDL
 
-  return colsTable
+  let distTable = case optDist of
+        Just _  -> evalDistinct colsTable
+        Nothing -> colsTable
+
+  finalTable <- case optUnion of
+        Just sstmt -> evalUnion distTable sstmt
+        Nothing    -> return distTable
+
+  return finalTable
   
 
 
@@ -262,22 +264,30 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
 
 -- Evaluates all the conditions how it works:
 -- Filters rows from the Cartesian product that satisfy all conditions.
-evalConditions :: [Condition] -> TableDataList -> Table
-evalConditions conds tblDataLst  =
-  filter (\row -> all (\cond -> rowSatisfies row cond tblDataLst) conds) fullRows
-  where
-    allTables = map snd tblDataLst
-    fullRows  = cartesianProduct allTables
+  -- Filters rows from the Cartesian product that satisfy all conditions.
+evalConditions :: TableDataList -> [Condition] -> TableDataList
+evalConditions [((alias, filePath), table)] conds =
+  let
+    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond [((alias, filePath), table)]) conds) table -- if only one table like task 2 for example 
+  in
+    [((alias, filePath), filteredRows)]
 
--- Generates all row combinations from multiple tables
-cartesianProduct :: [Table] -> Table
-cartesianProduct [] = [[]]
-cartesianProduct (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- cartesianProduct ts]
+--Handling multiple tables
+evalConditions tablesData conds =
+  let
+    allTables = map snd tablesData
+    fullRows  = cartesianProduct allTables
+    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond tablesData) conds) fullRows
+    splitRows = map (`splitRowByTables` tablesData) filteredRows
+    groupedByAlias = groupByAlias splitRows
+  in
+    rebuildTableDataList groupedByAlias tablesData
+
 
 
 -- Checks whether a combined row satisfies a given condition, using correct table slices by alias.
 rowSatisfies :: Row -> Condition -> TableDataList -> Bool
-rowSatisfies fullRow cond tblDataLst =
+rowSatisfies fullRow cond tablesData =
   case cond of
     Equals col val        -> compareValue (getValue col) val (==)
     NotEquals col val     -> compareValue (getValue col) val (/=)
@@ -291,7 +301,7 @@ rowSatisfies fullRow cond tblDataLst =
   where
     -- Associate each alias with its chunk of the flat row
     tableSlices :: [(Ident, Row)]
-    tableSlices = splitRowByTables fullRow tblDataLst
+    tableSlices = splitRowByTables fullRow tablesData
 
     -- Lookup the correct value from the correct table slice
     getValue :: Column -> String
@@ -301,17 +311,6 @@ rowSatisfies fullRow cond tblDataLst =
         Nothing     -> error $ "Alias '" ++ alias ++ "' not found in row."
     getValue (ColumnByValue val _) = evalValue val
 
-
--- Splits a flat cartesian row into slices corresponding to each table's alias.
-splitRowByTables :: Row -> TableDataList -> [(Ident, Row)]
-splitRowByTables row tables = go row tables []
-  where
-    go [] [] acc = reverse acc
-    go r (((alias, _), t):ts) acc =
-      let n = if null t then 0 else length (head t)
-          (chunk, rest) = splitAt n r
-      in go rest ts ((alias, chunk):acc)
-    go _ _ _ = error "Row and tables mismatch"
 
 -- Get the value at the given index and returns empty string if index out of bounds
 safeIndex :: Int -> [String] -> String
@@ -336,20 +335,13 @@ compareVal colStr value f =
       return $ f parsed num
     ValString str ->
       return $ f colStr str
-    ValIdent identity ->
-      return $ f colStr identity
-
-
-
-
-
-
-
+    ValIdent ident ->
+      return $ f colStr ident
 
 
 extractColumn :: Column -> (Ident, Int)
-extractColumn (ColumnByIndex identity index) = (identity,index)
-extractColumn (ColumnByValue val identity) = (evalValue val, -1)
+extractColumn (ColumnByIndex ident index) = (ident,index)
+extractColumn (ColumnByValue val ident) = (evalValue val, -1)
 
 
 -- Evaluates the Value into a more suitable structure
@@ -357,11 +349,96 @@ evalValue :: Value -> String
 evalValue (ValString str) = str
 evalValue (ValInteger int) = show int
 evalValue (ValNumber double) = show double
-evalValue (ValIdent identity) = identity
+evalValue (ValIdent ident) = ident
 
 
 -- Evaluates the TableNames into a more suitable structure
 evalTableName :: TableName -> (Ident,FilePath)
-evalTableName (TableAlias filePath identity) = (identity,filePath)
+evalTableName (TableAlias filePath ident) = (ident,filePath)
+
+
+
+--Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
+evalOrderBy :: OrderClause -> TableDataList -> TableDataList
+evalOrderBy orderClause tablesData =
+  let
+    extractKey = buildSortKeyExtractor orderClause tablesData
+    combinedTable = cartesianProduct (map snd tablesData)
+    sorted = case orderClause of
+      OrderByAsc _  -> sortBy (compareRows extractKey) combinedTable
+      OrderByDesc _ -> sortBy (flip $ compareRows extractKey) combinedTable
+    slicedRows = map (`splitRowByTables` tablesData) sorted
+    grouped = groupByAlias slicedRows
+  in
+    rebuildTableDataList grouped tablesData
+
+
+-- Builds a function that extracts the sort key a String from a row based on the given OrderClause and table structure.
+buildSortKeyExtractor :: OrderClause -> TableDataList -> (Row -> String)
+buildSortKeyExtractor clause tables =
+  case clause of
+    OrderByAsc col  -> \row -> extractValueFromColumn col row tables
+    OrderByDesc col -> \row -> extractValueFromColumn col row tables
+
+-- Retrieves the value from the specified column in a row by looking up the corresponding table alias and index.
+extractValueFromColumn :: Column -> Row -> TableDataList -> String
+extractValueFromColumn (ColumnByIndex alias idx) row tables =
+  case lookup alias (splitRowByTables row tables) of
+    Just subRow -> safeIndex idx subRow
+    Nothing     -> error $ "Alias '" ++ alias ++ "' not found."
+extractValueFromColumn (ColumnByValue val _) _ _ = evalValue val
+
+-- this compares the rows 
+compareRows :: (Row -> String) -> Row -> Row -> Ordering
+compareRows keyFn r1 r2 = compare (keyFn r1) (keyFn r2)
+
+-- Applies the LIMIT clause to the combined rows from all tables, then reconstructs the result into a TableDataList.
+evalLimit :: LimitClause -> TableDataList -> TableDataList
+evalLimit limitClause tablesData =
+  let
+    combinedTable = cartesianProduct (map snd tablesData)
+    limited = case limitClause of
+      Limit n -> take n combinedTable
+      LimitOffset offset n -> take n (drop offset combinedTable)
+    sliced = map (`splitRowByTables` tablesData) limited
+    grouped = groupByAlias sliced
+  in
+    rebuildTableDataList grouped tablesData
+
+  
+--Groups rows by their alias, combining all rows that belong to the same alias into one list.
+groupByAlias :: [TableSlices] -> [(Ident, [Row])]
+groupByAlias slices = foldr insertRow [] (concat slices)
+  where
+    insertRow (alias, row) [] = [(alias, [row])]
+    insertRow (alias, row) ((a, rs):rest)
+      | alias == a = (a, row:rs) : rest
+      | otherwise  = (a, rs) : insertRow (alias, row) rest
+
+
+--Reconstructs a TableDataList by attaching filtered rows to their original aliases and file paths from the old data.
+rebuildTableDataList :: [(Ident, [Row])] -> TableDataList -> TableDataList
+rebuildTableDataList grouped oldData =
+  [ ((alias, findFilePath alias), reverse rows) | (alias, rows) <- grouped ]
+  where
+    findFilePath a = case lookup a (map (\((id, fp), _) -> (id, fp)) oldData) of
+                       Just fp -> fp
+                       Nothing -> error $ "Missing alias: " ++ a
+
+-- Generates all row combinations from multiple tables
+cartesianProduct :: [Table] -> Table
+cartesianProduct [] = [[]]
+cartesianProduct (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- cartesianProduct ts]
+
+-- Splits a flat cartesian row into slices corresponding to each table's alias.
+splitRowByTables :: Row -> TableDataList -> [(Ident, Row)]
+splitRowByTables row tables = go row tables []
+  where
+    go [] [] acc = reverse acc
+    go r (((alias, _), t):ts) acc =
+      let n = if null t then 0 else length (head t)
+          (chunk, rest) = splitAt n r
+      in go rest ts ((alias, chunk):acc)
+    go _ _ _ = error "Row and tables mismatch"
 
   
