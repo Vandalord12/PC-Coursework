@@ -8,9 +8,9 @@ import Data.Maybe (mapMaybe)
 import Data.List
 import Data.Ord 
 
-type TableAlias = (FilePath, Ident)
--- I assume that only Identifier[Int] is the only way to access a column
--- data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe JoinClause) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) (Maybe MergeMode)
+
+type TableSlices = [(Ident, Row)]
+
 type TableDataList = [TableData]
 type TableSlices = [(Ident, Row)]
 type TableData = ((Ident,FilePath),Table)
@@ -18,43 +18,43 @@ type TableData = ((Ident,FilePath),Table)
 
 -- evaluate the select statement by chaining together all the possible table operations
 evalSelectStmt :: SelectStmt -> IO Table
-evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion _) = do
+evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion) = do
   let (tableId, filePath) = evalTableName tbl
   initialTable <- readCSV filePath
-  let tableDataList =  ((tableId, filePath),initialTable):[]
+  let tableDataList = [((tableId, filePath), initialTable)]
 
   joinsTDL <- case optJcs of
     Just jcs -> evalJoins jcs tableDataList
-    Nothing -> return tableDataList
-  
+    Nothing  -> return tableDataList
+
   let condsTDL = case optConds of
-    Just conds -> evalConditions conds joinsTDL
-    Nothing -> joinsTDL
+        Just conds -> evalConditions joinsTDL conds
+        Nothing    -> joinsTDL
 
   let orderTDL = case optOrd of
-    Just orderc -> evalOrderBy orderc condsTDL
-    Nothing -> condsTDL
-  
+        Just orderc -> evalOrderBy orderc condsTDL
+        Nothing     -> condsTDL
+
   let limitTDL = case optLimit of
-    Just limit -> evalLimit limit orderTDL
-    Nothing -> orderTDL
+        Just limit -> evalLimit limit orderTDL
+        Nothing    -> orderTDL
 
   let colsTable = evalColumns cols limitTDL
 
   let distTable = case optDist of
-    Just _ -> evalDistinct colsTable
-    Nothing -> colsTable
+        Just _  -> evalDistinct colsTable
+        Nothing -> colsTable
 
-  let unionTable = case optUnion of
-    Just sstmt -> evalUnion distTable sstmt
-    Nothing -> distTable
+  finalTable <- case optUnion of
+        Just sstmt -> evalUnion distTable sstmt
+        Nothing    -> return distTable
 
-  return unionTable
+  return finalTable
   
 
 -- Evaluates all the columns
 evalColumns :: Columns -> TableDataList -> Table
-evalColumns cols tds jcs = case cols of
+evalColumns cols tds = case cols of
     (SelectAllColumns) -> allColumns tds
     (SelectColumns cs) -> transpose (selectedColumns cs tds)
 
@@ -76,7 +76,7 @@ selectedColumns (col:cols) tds = extractedCol:selectedColumns cols tds
   where
   extractedCol = case (extractColumn col) of 
       (value, -1) -> replicate (length (snd $ head tds)) value
-      (ident, colIndex) ->  getColumn ident colIndex tds
+      (identity, colIndex) ->  getColumn identity colIndex tds
 
 
 evalDistinct :: Table -> Table
@@ -86,10 +86,21 @@ evalUnion :: Table -> SelectStmt -> Table
 evalUnion tbl stmt = combineTables tbl (evalSelectStmt stmt)
 
 
+
+
+
+
+
+
+
+
+
 -- Evaluate all the join clauses by feeding the output of one into the next
 evalJoins :: [JoinClause] -> TableDataList -> IO TableDataList
-evaledJoin [] _ = []
-evalJoins (j:js) tds = evalJoins (evalJoin tds j) js
+evalJoins [] tds = return tds
+evalJoins (j:js) tds = do 
+  evaledJoin <- evalJoin j tds
+  evalJoins js (evaledJoin)
 
 
 -- Splits the components of the JoinClause into its most basic parts
@@ -105,23 +116,23 @@ extractJoin jc = (joinType, tblName, onCond)
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
-evalJoin :: TableDataList -> JoinClause -> IO TableDataList
-evalJoin tds jc = do 
+evalJoin :: JoinClause -> TableDataList -> IO TableDataList
+evalJoin jc tds = do 
 
 
   let (joinType, tableName, onCond) = extractJoin jc
   let (tableIdent,filePath) = evalTableName tableName -- get the tables info
 
-  let alreadyExists = any (\((id,fp),_) -> (id == tableIdent) || (fp == filePath)) tds -- checks if table already in tds
+  let alreadyExists = any (\((ident,fp),_) -> (ident == tableIdent) || (fp == filePath)) tds -- checks if table already in tds
 
-  newTblsData <- case alreadyExists of
+  newTblsData <- (case alreadyExists of
     True -> return tds -- If already exists, dont add it to the list
     False -> do -- If it does not exist then, read the csv and add the table to the list
       loadedTbl <- readCSV filePath
       let tblData = ((tableIdent,filePath),loadedTbl)
-      return tblData:tds 
+      return (tblData:tds) )
   
-  (condFunc,(leftCol,rightCol)) = evalOnCondition onCond -- get the on condition component parts
+  let (condFunc,(leftCol,rightCol)) = evalOnCondition onCond -- get the on condition component parts
   let joinedTblsData = helperJoin newTblsData joinType tableIdent condFunc leftCol rightCol -- send to helperJoin todo the rest 
 
   return joinedTblsData
@@ -133,18 +144,18 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
   -- For each different join type do the relavent function
   "Inner" -> makeTableDataList lId rId (innerJoin indexLCol indexRCol onCondFunc) tds resetData
   "Left" -> makeTableDataList lId rId (leftJoin indexLCol indexRCol onCondFunc) tds resetData
-  "Right" -> makeTableDataList lId rId (rightJoin indexLCol indexRCol onCondFunc) tds resetData
+  "Right" -> makeTableDataList rId lId (rightJoin indexLCol indexRCol onCondFunc) tds resetData
   "Full" -> makeTableDataList lId rId (fullJoin indexLCol indexRCol onCondFunc) tds resetData
   "Cross" -> makeTableDataList lId rId (crossJoin indexLCol indexRCol) tds resetData)
 
   where
     (lId,evaledLeftColumn) = case (extractColumn leftCol) of -- get the left/first column in the on condition 
       (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
-      (ident, colIndex) ->  (ident, getColumn ident colIndex tds) -- get the table containing the colum and the column
+      (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
     (rId,evaledRightColumn) = case (extractColumn rightCol) of -- get the right/second column in the on condition
       (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
-      (ident, colIndex) ->  (ident, getColumn ident colIndex tds) -- get the table containing the colum and the column
+      (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
     indexLCol = zip [0..] evaledLeftColumn -- index the values of the column
     indexRCol = zip [0..] evaledRightColumn -- index the values of the column
@@ -153,9 +164,9 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
     
 
 getTableById :: Ident -> TableDataList -> Table
-getTableById id [] = error ("Table Identifier: " ++ id ++ " does not exist")
-getTableById id (((ident,_),tbl):tds) | id == ident = tbl
-                                     | otherwise = getTableById id tds
+getTableById ident [] = error ("Table Identifier: " ++ ident ++ " does not exist")
+getTableById ident (((identity,_),tbl):tds) | ident == identity = tbl
+                                     | otherwise = getTableById ident tds
 
 
 -- Evaluates the OnCondition into a more suitable structure
@@ -176,7 +187,8 @@ check val1 val2 index f | f val1 val2 = index
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 innerJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
-innerJoin ((leftI,leftVal):ls) rs f = [(leftI,rightI) | (rightI,rightVal) <- rs, (f leftVal rightVal)]
+innerJoin [] _ _ = []
+innerJoin ((leftI,leftVal):ls) rs f = [(leftI,rightI) | (rightI,rightVal) <- rs, (f leftVal rightVal)] ++ (innerJoin ls rs f)
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 leftJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
@@ -190,7 +202,7 @@ rightJoin ls ((rightI,rightVal):rs) f = [(rightI,check rightVal leftVal leftI f)
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 fullJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
-fullJoin ls rs f = nub $ (leftJoin ls rs f) ++ (rightJoin ls rs f)
+fullJoin ls rs f = nub ((leftJoin ls rs f) ++ (rightJoin ls rs f))
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 crossJoin :: [(Int, String)] -> [(Int, String)] -> [(Int,Int)]
@@ -199,7 +211,7 @@ crossJoin ls rs = [(i1,i2) | (i1,_) <- ls, (i2,_) <- rs]
 
 -- Iterates over the matching rows and makes a new table data list based on it
 makeTableDataList :: Ident -> Ident -> [(Int,Int)] -> TableDataList -> TableDataList -> TableDataList
-makeTableDataList _ _ [] accTbls = accTbls
+makeTableDataList _ _ [] _ accTbls = accTbls
 makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList leftId rightId as tds updated 
   
   
@@ -212,19 +224,20 @@ makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList le
   updated = updateTblsData rrow rightId (updateTblsData lrow leftId accTbls) -- update the new table data list
   
 
+
 getTableArity :: Ident -> TableDataList -> Int
-getTableArity id tds = length $ head (getTableById id)
+getTableArity ident tds = length $ head (getTableById ident tds)
 
 getRow :: Ident -> Int -> TableDataList -> [String]
-getRow id rNum tds = (getTableById id tds) !! rNum
+getRow ident rNum tds = (getTableById ident tds) !! rNum
 
 getColumn :: Ident -> Int -> TableDataList -> [String]
-getColumn id colNum tds = (transpose (getTableById id tds)) !! colNum
+getColumn ident colNum tds = (transpose (getTableById ident tds)) !! colNum
 
 updateTblsData :: [String] -> Ident -> TableDataList -> TableDataList
 updateTblsData _ _ [] = []
-updateTblsData row ident (((id,fp),tbl):tds) | id == ident = (((id,fp),added):tds)
-                                             | otherwise = (((id,fp),tbl):tds):updateTblsData row ident tds
+updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((ident,fp),added):tds)
+                                                   | otherwise = ((ident,fp),tbl):updateTblsData row identity tds
   where added = reverse (row:(reverse tbl))
 
 
@@ -307,7 +320,7 @@ compareVal colStr value f =
 
 extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
-extractColumn (ColmnByValue val ident) = (evalValue val, -1)
+extractColumn (ColumnByValue val ident) = (evalValue val, -1)
 
 
 -- Evaluates the Value into a more suitable structure
@@ -321,6 +334,91 @@ evalValue (ValIdent ident) = ident
 -- Evaluates the TableNames into a more suitable structure
 evalTableName :: TableName -> (Ident,FilePath)
 evalTableName (TableAlias filePath ident) = (ident,filePath)
+
+
+
+--Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
+evalOrderBy :: OrderClause -> TableDataList -> TableDataList
+evalOrderBy orderClause tablesData =
+  let
+    extractKey = buildSortKeyExtractor orderClause tablesData
+    combinedTable = cartesianProduct (map snd tablesData)
+    sorted = case orderClause of
+      OrderByAsc _  -> sortBy (compareRows extractKey) combinedTable
+      OrderByDesc _ -> sortBy (flip $ compareRows extractKey) combinedTable
+    slicedRows = map (`splitRowByTables` tablesData) sorted
+    grouped = groupByAlias slicedRows
+  in
+    rebuildTableDataList grouped tablesData
+
+
+-- Builds a function that extracts the sort key a String from a row based on the given OrderClause and table structure.
+buildSortKeyExtractor :: OrderClause -> TableDataList -> (Row -> String)
+buildSortKeyExtractor clause tables =
+  case clause of
+    OrderByAsc col  -> \row -> extractValueFromColumn col row tables
+    OrderByDesc col -> \row -> extractValueFromColumn col row tables
+
+-- Retrieves the value from the specified column in a row by looking up the corresponding table alias and index.
+extractValueFromColumn :: Column -> Row -> TableDataList -> String
+extractValueFromColumn (ColumnByIndex alias idx) row tables =
+  case lookup alias (splitRowByTables row tables) of
+    Just subRow -> safeIndex idx subRow
+    Nothing     -> error $ "Alias '" ++ alias ++ "' not found."
+extractValueFromColumn (ColumnByValue val _) _ _ = evalValue val
+
+-- this compares the rows 
+compareRows :: (Row -> String) -> Row -> Row -> Ordering
+compareRows keyFn r1 r2 = compare (keyFn r1) (keyFn r2)
+
+-- Applies the LIMIT clause to the combined rows from all tables, then reconstructs the result into a TableDataList.
+evalLimit :: LimitClause -> TableDataList -> TableDataList
+evalLimit limitClause tablesData =
+  let
+    combinedTable = cartesianProduct (map snd tablesData)
+    limited = case limitClause of
+      Limit n -> take n combinedTable
+      LimitOffset offset n -> take n (drop offset combinedTable)
+    sliced = map (`splitRowByTables` tablesData) limited
+    grouped = groupByAlias sliced
+  in
+    rebuildTableDataList grouped tablesData
+
+  
+--Groups rows by their alias, combining all rows that belong to the same alias into one list.
+groupByAlias :: [TableSlices] -> [(Ident, [Row])]
+groupByAlias slices = foldr insertRow [] (concat slices)
+  where
+    insertRow (alias, row) [] = [(alias, [row])]
+    insertRow (alias, row) ((a, rs):rest)
+      | alias == a = (a, row:rs) : rest
+      | otherwise  = (a, rs) : insertRow (alias, row) rest
+
+
+--Reconstructs a TableDataList by attaching filtered rows to their original aliases and file paths from the old data.
+rebuildTableDataList :: [(Ident, [Row])] -> TableDataList -> TableDataList
+rebuildTableDataList grouped oldData =
+  [ ((alias, findFilePath alias), reverse rows) | (alias, rows) <- grouped ]
+  where
+    findFilePath a = case lookup a (map (\((id, fp), _) -> (id, fp)) oldData) of
+                       Just fp -> fp
+                       Nothing -> error $ "Missing alias: " ++ a
+
+-- Generates all row combinations from multiple tables
+cartesianProduct :: [Table] -> Table
+cartesianProduct [] = [[]]
+cartesianProduct (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- cartesianProduct ts]
+
+-- Splits a flat cartesian row into slices corresponding to each table's alias.
+splitRowByTables :: Row -> TableDataList -> [(Ident, Row)]
+splitRowByTables row tables = go row tables []
+  where
+    go [] [] acc = reverse acc
+    go r (((alias, _), t):ts) acc =
+      let n = if null t then 0 else length (head t)
+          (chunk, rest) = splitAt n r
+      in go rest ts ((alias, chunk):acc)
+    go _ _ _ = error "Row and tables mismatch"
 
 
 
