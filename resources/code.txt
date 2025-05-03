@@ -1,4 +1,0 @@
-SELECT i1[1]
-FROM ./input1.csv AS i1, ./input2.csv AS i2
-INNER JOIN i1 ON i1[2] = i2[2]
-WHERE i1 > 3

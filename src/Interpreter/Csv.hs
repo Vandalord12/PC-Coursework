@@ -49,6 +49,22 @@ writeCSV :: Table -> IO ()
 writeCSV table = mapM_ (putStrLn . formatRow) table
 
 
+
+
+-- Converts a list of strings 
+toCSVRow :: [String] -> String
+toCSVRow row = intercalate "," row  -- Join the elements with commas
+
+-- Converts a list of rows 
+toCSV :: [[String]] -> String
+toCSV rows = unlines $ map toCSVRow rows  -- Join rows with newlines
+
+-- A function to write the CSV content to a file
+writeToCSV :: FilePath -> [[String]] -> IO ()
+writeToCSV path rows = writeFile path (toCSV rows)
+
+
+
 -- Sort a table lexicographically
 sortTable :: Table -> Table
 sortTable = sort
@@ -60,28 +76,3 @@ unquote s
   | otherwise = s
 
 
-getColumnByIndex :: FilePath -> Int -> IO [String]
-getColumnByIndex filePath index = do
-  contents <- readCSV filePath
-  let output = getColByIndex contents index
-  return output
-  where
-    -- Collates all the values in the column
-    getColByIndex :: Table -> Int -> [String]
-    getColByIndex [] _ = []
-    getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
-
--- getRowByIndex :: String -> Int -> IO [String]
--- getRowByIndex
--- getSpecificValue :: String -> Int -> Int -> [String]
-
--- columnFinder :: Column -> [String]
--- columnFiner (ColumnByIndex tbl num) = do 
-
-
--- Will do this later
--- checkColumnNames :: FilePath -> IO Bool
--- checkColumnNames fileName = do
---   contents <- readCSV fileName
---   let firstRow = head contents
---   case 
