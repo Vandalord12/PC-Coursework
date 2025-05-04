@@ -32,7 +32,7 @@ tokens :-
   INTERSECT        { \p s -> TokenIntersect p }
   EXCEPT           { \p s -> TokenExcept p }
   LEFTMERGE        {\p s -> TokenLeftMerge p}
-  COALESCE          {\P s -> TokenCoalEsce}
+  COALESCE         {\P s -> TokenCoalEsce}
   -- This chunck is responsible about Insert, Delete, Update
   INSERT          { \p s -> TokenInsert p }
   INTO            { \p s -> TokenInto p }

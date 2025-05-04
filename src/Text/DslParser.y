@@ -44,7 +44,7 @@ LEFT           {TokenLeft _}
 RIGHT          {TokenRight _}
 FULL           {TokenFull _}
 OUTER          {TokenOuter _}
-CROSS      {TokenCross _}
+CROSS          {TokenCross _}
 ON             {TokenOn _ }
 AND            {TokenAnd _ }
 OR             {TokenOr _}
