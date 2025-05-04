@@ -9,7 +9,7 @@ import Data.List
 import Data.Ord 
 import Data.List (sortBy)
 import Data.Ord (comparing)
-
+import Debug.Trace
 
 type TableSlices = [(Ident, Row)]
 
@@ -17,6 +17,8 @@ type TableDataList = [TableData]
 
 type TableData = ((Ident,FilePath),Table)
 
+
+debugExpr x = traceShow x "HI"
 
 -- evaluate the select statement by chaining together all the possible table operations
 evalSelectStmt :: SelectStmt -> IO Table
@@ -66,8 +68,8 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
 -- Evaluates all the columns
 evalColumns :: Columns -> TableDataList -> Table
 evalColumns cols tds = case cols of
-    (SelectAllColumns) -> allColumns tds
-    (SelectColumns cs) -> transpose (selectedColumns cs tds)
+    (SelectAllColumns) -> transpose $ allColumns tds
+    (SelectColumns cs) -> transpose $ selectedColumns cs tds
 
 -- Helper function to evalColumns
 allColumns :: TableDataList -> Table
@@ -77,8 +79,8 @@ allColumns tds = combineTables tbls
 
 -- same funcition as the cartesion one in evaluator
 combineTables :: [Table] -> Table
-combineTables [] = [[]]
-combineTables (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- combineTables ts]
+combineTables [] = []
+combineTables (t:ts) = (transpose t) ++ combineTables ts
 
 -- Helper function to evalColumns
 selectedColumns :: [Column] -> TableDataList -> Table 
@@ -125,7 +127,7 @@ extractJoin jc = (joinType, tblName, onCond)
     LeftJoin t c -> ("Left", t, c)
     RightJoin t c -> ("Right", t, c)
     FullJoin t c -> ("Full", t, c)
-    CrossJoin t -> ("Cross", t, (OnColEquals (ColumnByIndex "null" 0) (ColumnByIndex "null" 0))) -- This needs work
+    CrossJoin (TableAlias fp ident) -> ("Cross", (TableAlias fp ident), (ColEquals (ColumnByIndex ident 0) (ColumnByIndex "*" 0))) -- This needs work
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
@@ -143,12 +145,30 @@ evalJoin jc tds = do
     False -> do -- If it does not exist then, read the csv and add the table to the list
       loadedTbl <- readCSV filePath
       let tblData = ((tableIdent,filePath),loadedTbl)
-      return (tblData:tds) )
+      return (tds ++ (tblData:[])) )
   
-  let (condFunc,(leftCol,rightCol)) = evalOnCondition onCond -- get the on condition component parts
+  let (condFunc,(col1,col2)) = evalOnCondition onCond -- get the on condition component parts
+  let (leftCol,rightCol) = identifyLRTbls tableIdent col1 col2
+  putStrLn (show (leftCol,rightCol))
   let joinedTblsData = helperJoin newTblsData joinType tableIdent condFunc leftCol rightCol -- send to helperJoin todo the rest 
 
   return joinedTblsData
+
+
+identifyLRTbls :: Ident -> Column -> Column -> (Column,Column)
+identifyLRTbls ident col1 col2 = (left,right)
+  where
+  id1 = case (extractColumn col1) of
+    (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+    (identity, _) ->  identity
+
+  id2 = case (extractColumn col2) of
+    (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+    (identity, _) ->  identity
+
+  (left,right) = case (ident == id1) of
+    True -> (col2,col1)
+    False -> (col1, col2)
 
 
 -- Continues evaluating the join
@@ -159,7 +179,7 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
   "Left" -> makeTableDataList lId rId (leftJoin indexLCol indexRCol onCondFunc) tds resetData
   "Right" -> makeTableDataList rId lId (rightJoin indexLCol indexRCol onCondFunc) tds resetData
   "Full" -> makeTableDataList lId rId (fullJoin indexLCol indexRCol onCondFunc) tds resetData
-  "Cross" -> makeTableDataList lId rId (crossJoin indexLCol indexRCol) tds resetData)
+  "Cross" -> makeCrossTDL rId (crossJoin crossLeftCol indexRCol) tds resetData)
 
   where
     (lId,evaledLeftColumn) = case (extractColumn leftCol) of -- get the left/first column in the on condition 
@@ -173,8 +193,14 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
     indexLCol = zip [0..] evaledLeftColumn -- index the values of the column
     indexRCol = zip [0..] evaledRightColumn -- index the values of the column
 
+    crossLeftCol = zip [0..] (findLeftColumnForCross tds)
+    --y = debugExpr (indexLCol,indexRCol)
+
     resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
-    
+
+findLeftColumnForCross :: TableDataList -> [String]
+findLeftColumnForCross tds = head $ transpose (snd $ head tds)
+
 
 getTableById :: Ident -> TableDataList -> Table
 getTableById ident [] = error ("Table Identifier: " ++ ident ++ " does not exist")
@@ -237,8 +263,20 @@ makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList le
   updated = updateTblsData rrow rightId (updateTblsData lrow leftId accTbls) -- update the new table data list
   
 
+makeCrossTDL :: Ident -> [(Int,Int)] -> TableDataList -> TableDataList -> TableDataList
+makeCrossTDL _ [] _ accTbls = accTbls
+makeCrossTDL rightId ((li,ri):as) tds accTbls = makeCrossTDL rightId as tds updatedCross
 
+  where
+  rrow = case ri of -- gets the row of index ri from the current table data list 
+    (-1) -> replicate (getTableArity rightId tds) "" -- if the index (ri) is invalid fill the space with empty strings
+    (r) -> (getTableById rightId tds) !! r
 
+  fTDs = filter (\((id,_),_) -> id /= rightId) accTbls
+  allRows = getAllRows ri fTDs
+
+  updatedCross = updateTblsData rrow rightId (updateCross allRows accTbls)
+  
 
 getTableArity :: Ident -> TableDataList -> Int
 getTableArity ident tds = length $ head (getTableById ident tds)
@@ -246,8 +284,23 @@ getTableArity ident tds = length $ head (getTableById ident tds)
 getRow :: Ident -> Int -> TableDataList -> [String]
 getRow ident rNum tds = (getTableById ident tds) !! rNum
 
+getAllRows :: Int -> TableDataList -> [(Ident,[String])]
+getAllRows row tds = firstFullRow
+  where
+  firstFullRow = map (\((id,_),tbl) -> (id,(tbl !! row))) tds
+
 getColumn :: Ident -> Int -> TableDataList -> [String]
 getColumn ident colNum tds = (transpose (getTableById ident tds)) !! colNum
+
+
+getTableDataById :: Ident -> TableDataList -> TableData
+getTableDataById ident [] = error ("Table Identifier: " ++ ident ++ " does not exist")
+getTableDataById ident (((identity,fp),tbl):tds) | ident == identity = ((identity,fp),tbl)
+                                     | otherwise = getTableDataById ident tds
+
+
+
+
 
 updateTblsData :: [String] -> Ident -> TableDataList -> TableDataList
 updateTblsData _ _ [] = []
@@ -256,6 +309,9 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
   where added = reverse (row:(reverse tbl))
 
 
+updateCross :: [(Ident,[String])] -> TableDataList -> TableDataList
+updateCross [] acc = acc
+updateCross ((ident,row):rows) acc = updateCross rows (updateTblsData row ident acc)
 
 
 
