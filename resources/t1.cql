@@ -1,3 +1,4 @@
 SELECT *
 FROM "resources/A.csv" AS A
-CROSS JOIN "resources/B.csv" AS B
+LEFT JOIN "resources/B.csv" AS B ON A[0] = B[0]
+
