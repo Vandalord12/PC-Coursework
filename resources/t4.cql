@@ -1,1 +1,2 @@
-SELECT a1, "foo" AS middle, a1 FROM "A.csv" AS A
+SELECT A[0],foo AS middle, A[0]
+FROM "resources/A.csv" AS A

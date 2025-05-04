@@ -31,7 +31,8 @@ tokens :-
   UNION            { \p s -> TokenUnion p }
   INTERSECT        { \p s -> TokenIntersect p }
   EXCEPT           { \p s -> TokenExcept p }
-  LEFTMERGE         {\p s -> TokenLeftMerge p}
+  LEFTMERGE        {\p s -> TokenLeftMerge p}
+  COALESCE          {\P s -> TokenCoalEsce}
   -- This chunck is responsible about Insert, Delete, Update
   INSERT          { \p s -> TokenInsert p }
   INTO            { \p s -> TokenInto p }
@@ -117,6 +118,7 @@ data Token =
   TokenIntersect AlexPosn |
   TokenExcept AlexPosn    |
   TokenLeftMerge AlexPosn |
+  TokenCoalEsce AlexPosn  |
   TokenInsert AlexPosn    |
   TokenInto AlexPosn      |
   TokenValues AlexPosn    |
@@ -188,6 +190,7 @@ tokenPosn (TokenUnion (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenIntersect (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenExcept (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenLeftMerge (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenCoalEsce (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 
 -- Insert/Update/Delete

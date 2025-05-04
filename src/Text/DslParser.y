@@ -31,6 +31,7 @@ UNION          {TokenUnion _}
 INTERSECT      {TokenIntersect _}
 EXCEPT         {TokenExcept _}
 LEFTMERGE      {TokenLeftMerge _ }
+COALESCE       {TokenCoalEsce _}
 INSERT         {TokenInsert _}
 INTO           {TokenInto _}
 VALUES         {TokenValues _}
@@ -125,6 +126,8 @@ ColumnList:
 Column:
     Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
+
+    
 
 
 TableName:

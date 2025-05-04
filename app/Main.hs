@@ -10,7 +10,7 @@ import Interpreter.GeneralEval
 
 main :: IO ()
 main = do
-  code <- readFile "resources/t2.cql" -- fix the task you want to test in here 
+  code <- readFile "resources/t4.cql" -- fix the task you want to test in here 
   let tokens = alexScanTokens code
   let ast = dslParser tokens
   putStrLn (show tokens)

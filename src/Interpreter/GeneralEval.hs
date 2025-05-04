@@ -127,7 +127,7 @@ extractJoin jc = (joinType, tblName, onCond)
     LeftJoin t c -> ("Left", t, c)
     RightJoin t c -> ("Right", t, c)
     FullJoin t c -> ("Full", t, c)
-    CrossJoin (TableAlias fp ident) -> ("Cross", (TableAlias fp ident), (ColEquals (ColumnByIndex ident 0) (ColumnByIndex "*" 0))) -- This needs work
+    CrossJoin (TableAlias fp ident) -> ("Cross", (TableAlias fp ident), (OnColEquals (ColumnByIndex ident 0) (ColumnByIndex "*" 0))) -- This needs work
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
