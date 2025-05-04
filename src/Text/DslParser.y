@@ -126,9 +126,7 @@ ColumnList:
 Column:
     Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
-
-    
-
+    | COALESCE "(" Column ',' Column ")" { ColumnCoalesce $3 $5 }
 
 TableName:
     FilePath AS Identifier {TableAlias $1 $3}
@@ -230,7 +228,7 @@ data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int deriving (Show, Eq)
+data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column deriving (Show, Eq)
 
 data TableName = TableAlias FilePath Ident deriving (Show, Eq)
 

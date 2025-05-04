@@ -85,11 +85,14 @@ combineTables (t:ts) = (transpose t) ++ combineTables ts
 -- Helper function to evalColumns
 selectedColumns :: [Column] -> TableDataList -> Table 
 selectedColumns [] _ = []
-selectedColumns (col:cols) tds = extractedCol:selectedColumns cols tds
+selectedColumns (col:cols) tds = extractedCol : selectedColumns cols tds
   where
-  extractedCol = case (extractColumn col) of 
-      (value, -1) -> replicate (length (snd $ head tds)) value
-      (identity, colIndex) ->  getColumn identity colIndex tds
+    extractedCol = case col of
+      ColumnCoalesce c1 c2 -> evalCoalesce c1 c2 tds
+      _ -> case extractColumn col of
+             (value, -1) -> replicate (length (snd $ head tds)) value
+             (identity, colIndex) -> getColumn identity colIndex tds
+
 
 
 evalDistinct :: Table -> Table
@@ -99,6 +102,21 @@ evalUnion :: Table -> SelectStmt -> IO Table
 evalUnion tbl stmt = do
   evaledSelect <- evalSelectStmt stmt
   return (combineTables (tbl : evaledSelect : []))
+
+
+evalCoalesce :: Column -> Column -> TableDataList -> [String]
+evalCoalesce c1 c2 tds =
+  let col1 = extractColumnOrValue c1 tds
+      col2 = extractColumnOrValue c2 tds
+  in zipWith (\x y -> if x == "" then y else x) col1 col2
+
+
+extractColumnOrValue :: Column -> TableDataList -> [String]
+extractColumnOrValue col tds =
+  case extractColumn col of
+    (val, -1) -> replicate (length (snd $ head tds)) val
+    (ident, idx) -> getColumn ident idx tds
+
 
 
 
@@ -416,6 +434,8 @@ compareVal colStr value f =
 extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
 extractColumn (ColumnByValue val ident) = (evalValue val, -1)
+extractColumn (ColumnCoalesce c1 _) = extractColumn c1
+
 
 
 -- Evaluates the Value into a more suitable structure
@@ -461,12 +481,6 @@ remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
   where
   allRows = trace ("allRows at index " ++ show index ++ ": " ++ show (getAllRows index tds)) (getAllRows index tds)
   updated = updateAllRows allRows accTDs
-
-
-
-
-compareRows :: (Row -> String) -> Row -> Row -> Ordering
-compareRows keyFn r1 r2 = compare (keyFn r1) (keyFn r2)
 
 
 
@@ -520,10 +534,7 @@ rebuildTableDataList grouped oldData =
                        Just fp -> fp
                        Nothing -> error $ "Missing alias: " ++ a
 
--- Generates all row combinations from multiple tables
-cartesianProduct :: [Table] -> Table
-cartesianProduct [] = [[]]
-cartesianProduct (t:ts) = [row1 ++ row2 | row1 <- t, row2 <- cartesianProduct ts]
+
 
 -- Splits a flat cartesian row into slices corresponding to each table's alias.
 splitRowByTables :: Row -> TableDataList -> [(Ident, Row)]
