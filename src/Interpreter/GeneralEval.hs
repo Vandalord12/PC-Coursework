@@ -7,6 +7,8 @@ import Text.Read (readMaybe)
 import Data.Maybe (mapMaybe)
 import Data.List
 import Data.Ord 
+import Data.List (sortBy)
+import Data.Ord (comparing)
 
 
 type TableSlices = [(Ident, Row)]
@@ -123,7 +125,7 @@ extractJoin jc = (joinType, tblName, onCond)
     LeftJoin t c -> ("Left", t, c)
     RightJoin t c -> ("Right", t, c)
     FullJoin t c -> ("Full", t, c)
-    CrossJoin t -> ("Cross", t, (ColEquals (ColumnByIndex "null" 0) (ColumnByIndex "null" 0))) -- This needs work
+    CrossJoin t -> ("Cross", t, (OnColEquals (ColumnByIndex "null" 0) (ColumnByIndex "null" 0))) -- This needs work
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
@@ -182,12 +184,12 @@ getTableById ident (((identity,_),tbl):tds) | ident == identity = tbl
 
 -- Evaluates the OnCondition into a more suitable structure
 evalOnCondition :: OnCondition -> ((String -> String -> Bool),(Column, Column))
-evalOnCondition (ColEquals col1 col2) = ((==),(col1,col2))
-evalOnCondition (ColNotEquals col1 col2) = ((/=),(col1,col2))
-evalOnCondition (ColLessThan col1 col2) = ((<),(col1,col2))
-evalOnCondition (ColGreaterThan col1 col2) = ((>),(col1,col2))
-evalOnCondition (ColLessThanEq col1 col2) = ((<=),(col1,col2))
-evalOnCondition (ColGreaterThanEq col1 col2) = ((>=),(col1,col2))
+evalOnCondition (OnColEquals col1 col2) = ((==),(col1,col2))
+evalOnCondition (OnColNotEquals col1 col2) = ((/=),(col1,col2))
+evalOnCondition (OnColLessThan col1 col2) = ((<),(col1,col2))
+evalOnCondition (OnColGreaterThan col1 col2) = ((>),(col1,col2))
+evalOnCondition (OnColLessThanEq col1 col2) = ((<=),(col1,col2))
+evalOnCondition (OnColGreaterThanEq col1 col2) = ((>=),(col1,col2))
 
 
 
@@ -265,23 +267,28 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
 -- Evaluates all the conditions how it works:
 -- Filters rows from the Cartesian product that satisfy all conditions.
   -- Filters rows from the Cartesian product that satisfy all conditions.
-evalConditions :: TableDataList -> [Condition] -> TableDataList
-evalConditions [((alias, filePath), table)] conds =
-  let
-    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond [((alias, filePath), table)]) conds) table -- if only one table like task 2 for example 
-  in
-    [((alias, filePath), filteredRows)]
 
---Handling multiple tables
+evalConditions :: TableDataList -> [Condition] -> TableDataList
 evalConditions tablesData conds =
   let
-    allTables = map snd tablesData
-    fullRows  = cartesianProduct allTables
-    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond tablesData) conds) fullRows
-    splitRows = map (`splitRowByTables` tablesData) filteredRows
-    groupedByAlias = groupByAlias splitRows
+    -- Sort the tables by alias so A comes before B
+    sortedTables = sortBy (comparing (fst . fst)) tablesData
+
+    -- Combine rows by row index, not cartesian product
+    joinedRows = map concat (transpose (map snd sortedTables))
+
+    -- Filter based on WHERE
+    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond sortedTables) conds) joinedRows
+
+    -- Re-split by alias
+    splitRows = map (`splitRowByTables` sortedTables) filteredRows
+    grouped = groupByAlias splitRows
   in
-    rebuildTableDataList groupedByAlias tablesData
+    rebuildTableDataList grouped sortedTables
+
+
+
+
 
 
 
@@ -289,12 +296,22 @@ evalConditions tablesData conds =
 rowSatisfies :: Row -> Condition -> TableDataList -> Bool
 rowSatisfies fullRow cond tablesData =
   case cond of
+    -- Column = Value comparisons
     Equals col val        -> compareValue (getValue col) val (==)
     NotEquals col val     -> compareValue (getValue col) val (/=)
     LessThan col val      -> compareValue (getValue col) val (<)
     GreaterThan col val   -> compareValue (getValue col) val (>)
     LessThanEq col val    -> compareValue (getValue col) val (<=)
     GreaterThanEq col val -> compareValue (getValue col) val (>=)
+
+    ColEquals col1 col2        -> getValue col1 == getValue col2
+    ColNotEquals col1 col2     -> getValue col1 /= getValue col2
+    ColLessThan col1 col2      -> getValue col1 <  getValue col2
+    ColGreaterThan col1 col2   -> getValue col1 >  getValue col2
+    ColLessThanEq col1 col2    -> getValue col1 <= getValue col2
+    ColGreaterThanEq col1 col2 -> getValue col1 >= getValue col2
+
+    -- Other conditions
     InList col vals       -> any (\v -> compareValue (getValue col) v (==)) vals
     Between col v1 v2     -> compareValue (getValue col) v1 (>=) &&
                              compareValue (getValue col) v2 (<=)
@@ -310,6 +327,7 @@ rowSatisfies fullRow cond tablesData =
         Just subRow -> safeIndex idx subRow
         Nothing     -> error $ "Alias '" ++ alias ++ "' not found in row."
     getValue (ColumnByValue val _) = evalValue val
+
 
 
 -- Get the value at the given index and returns empty string if index out of bounds
@@ -359,18 +377,28 @@ evalTableName (TableAlias filePath ident) = (ident,filePath)
 
 
 --Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
-evalOrderBy :: OrderClause -> TableDataList -> TableDataList
+evalOrderBy :: OrderClause -> TableDataList -> TableDataList -- needs to get tested 
 evalOrderBy orderClause tablesData =
   let
+    joinedRows = map concat (transpose (map snd tablesData))
+
+    lexSorted = sort joinedRows 
+
     extractKey = buildSortKeyExtractor orderClause tablesData
-    combinedTable = cartesianProduct (map snd tablesData)
     sorted = case orderClause of
-      OrderByAsc _  -> sortBy (compareRows extractKey) combinedTable
-      OrderByDesc _ -> sortBy (flip $ compareRows extractKey) combinedTable
+      OrderByAsc _  -> sortBy (flip $  compareRows extractKey) lexSorted
+      OrderByDesc _ -> sortBy (compareRows extractKey) lexSorted
+
     slicedRows = map (`splitRowByTables` tablesData) sorted
     grouped = groupByAlias slicedRows
   in
     rebuildTableDataList grouped tablesData
+
+
+
+compareRows :: (Row -> String) -> Row -> Row -> Ordering
+compareRows keyFn r1 r2 = compare (keyFn r1) (keyFn r2)
+
 
 
 -- Builds a function that extracts the sort key a String from a row based on the given OrderClause and table structure.
@@ -388,20 +416,18 @@ extractValueFromColumn (ColumnByIndex alias idx) row tables =
     Nothing     -> error $ "Alias '" ++ alias ++ "' not found."
 extractValueFromColumn (ColumnByValue val _) _ _ = evalValue val
 
--- this compares the rows 
-compareRows :: (Row -> String) -> Row -> Row -> Ordering
-compareRows keyFn r1 r2 = compare (keyFn r1) (keyFn r2)
+
 
 -- Applies the LIMIT clause to the combined rows from all tables, then reconstructs the result into a TableDataList.
-evalLimit :: LimitClause -> TableDataList -> TableDataList
+evalLimit :: LimitClause -> TableDataList -> TableDataList -- not tested yet 
 evalLimit limitClause tablesData =
   let
-    combinedTable = cartesianProduct (map snd tablesData)
-    limited = case limitClause of
-      Limit n -> take n combinedTable
-      LimitOffset offset n -> take n (drop offset combinedTable)
-    sliced = map (`splitRowByTables` tablesData) limited
-    grouped = groupByAlias sliced
+    joinedRows = map concat (transpose (map snd tablesData))
+    limitedRows = case limitClause of
+      Limit n -> take n joinedRows
+      LimitOffset offset n -> take n (drop offset joinedRows)
+    splitRows = map (`splitRowByTables` tablesData) limitedRows
+    grouped = groupByAlias splitRows
   in
     rebuildTableDataList grouped tablesData
 

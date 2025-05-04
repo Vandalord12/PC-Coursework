@@ -1,1 +1,4 @@
-SELECT a1, a2 FROM "A.csv" AS A WHERE a2 != ""
+SELECT A[0], A[1]
+FROM "resources/A.csv" AS A 
+WHERE A[1] != ""
+ORDER BY A[0]

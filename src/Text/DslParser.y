@@ -149,12 +149,12 @@ Join:
     | CROSS JOIN TableName {CrossJoin $3}
 
 OnCondition:
-    Column "=" Column             { ColEquals $1 $3 }
-    | Column "!=" Column            { ColNotEquals $1 $3 }
-    | Column "<" Column             { ColLessThan $1 $3 }
-    | Column ">" Column             { ColGreaterThan $1 $3 }
-    | Column "<=" Column            { ColLessThanEq $1 $3 }
-    | Column ">=" Column            { ColGreaterThanEq $1 $3 }
+    Column "=" Column             { OnColEquals $1 $3 }
+    | Column "!=" Column            { OnColNotEquals $1 $3 }
+    | Column "<" Column             { OnColLessThan $1 $3 }
+    | Column ">" Column             { OnColGreaterThan $1 $3 }
+    | Column "<=" Column            { OnColLessThanEq $1 $3 }
+    | Column ">=" Column            { OnColGreaterThanEq $1 $3 }
 
 -- Option Where
 OptWhere: WHERE ConditionList { Just $2 } | { Nothing }
@@ -173,6 +173,12 @@ Condition:
     | Column ">" Value             { GreaterThan $1 $3 }
     | Column "<=" Value            { LessThanEq $1 $3 }
     | Column ">=" Value            { GreaterThanEq $1 $3 }
+    | Column "=" Column             { ColEquals $1 $3 }
+    | Column "!=" Column            { ColNotEquals $1 $3 }
+    | Column "<" Column             { ColLessThan $1 $3 }
+    | Column ">" Column             { ColGreaterThan $1 $3 }
+    | Column "<=" Column            { ColLessThanEq $1 $3 }
+    | Column ">=" Column            { ColGreaterThanEq $1 $3 }
     | Column IN "(" ValueList ")"  { InList $1 $4 }
     | Column BETWEEN Value AND Value { Between $1 $3 $5 }
     --| Column LIKE String           { Like $1 $3 }
@@ -236,12 +242,12 @@ data JoinClause
     deriving (Show, Eq)
 
 data OnCondition
-    = ColEquals Column Column
-    | ColNotEquals Column Column
-    | ColLessThan Column Column
-    | ColGreaterThan Column Column
-    | ColLessThanEq Column Column
-    | ColGreaterThanEq Column Column
+    = OnColEquals Column Column
+    | OnColNotEquals Column Column
+    | OnColLessThan Column Column
+    | OnColGreaterThan Column Column
+    | OnColLessThanEq Column Column
+    | OnColGreaterThanEq Column Column
     deriving (Show, Eq)
 
 data Condition
@@ -251,6 +257,12 @@ data Condition
     | GreaterThan Column Value
     | LessThanEq Column Value
     | GreaterThanEq Column Value
+    | ColEquals Column Column
+    | ColNotEquals Column Column
+    | ColLessThan Column Column
+    | ColGreaterThan Column Column
+    | ColLessThanEq Column Column
+    | ColGreaterThanEq Column Column
     | InList Column [Value]
     | Between Column Value Value
     deriving (Show, Eq)
