@@ -9,4 +9,3 @@ JOIN "resources/B.csv" AS B ON A[0] = B[0]
 
 
 
-
