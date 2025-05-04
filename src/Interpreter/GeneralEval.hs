@@ -127,7 +127,7 @@ extractJoin jc = (joinType, tblName, onCond)
     LeftJoin t c -> ("Left", t, c)
     RightJoin t c -> ("Right", t, c)
     FullJoin t c -> ("Full", t, c)
-    CrossJoin (TableAlias fp ident) -> ("Cross", (TableAlias fp ident), (ColEquals (ColumnByIndex ident 0) (ColumnByIndex "*" 0))) -- This needs work
+    CrossJoin (TableAlias fp ident) -> ("Cross", (TableAlias fp ident), (OnColEquals (ColumnByIndex ident 0) (ColumnByIndex "*" 0))) -- This needs work
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
@@ -265,7 +265,7 @@ makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList le
 
 makeCrossTDL :: Ident -> [(Int,Int)] -> TableDataList -> TableDataList -> TableDataList
 makeCrossTDL _ [] _ accTbls = accTbls
-makeCrossTDL rightId ((li,ri):as) tds accTbls = makeCrossTDL rightId as tds updatedCross
+makeCrossTDL rightId ((li,ri):as) tds accTbls = makeCrossTDL rightId as tds updated
 
   where
   rrow = case ri of -- gets the row of index ri from the current table data list 
@@ -275,7 +275,7 @@ makeCrossTDL rightId ((li,ri):as) tds accTbls = makeCrossTDL rightId as tds upda
   fTDs = filter (\((id,_),_) -> id /= rightId) accTbls
   allRows = getAllRows ri fTDs
 
-  updatedCross = updateTblsData rrow rightId (updateCross allRows accTbls)
+  updated = updateTblsData rrow rightId (updateAllRows allRows accTbls)
   
 
 getTableArity :: Ident -> TableDataList -> Int
@@ -309,9 +309,9 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
   where added = reverse (row:(reverse tbl))
 
 
-updateCross :: [(Ident,[String])] -> TableDataList -> TableDataList
-updateCross [] acc = acc
-updateCross ((ident,row):rows) acc = updateCross rows (updateTblsData row ident acc)
+updateAllRows :: [(Ident,[String])] -> TableDataList -> TableDataList
+updateAllRows [] acc = acc
+updateAllRows ((ident,row):rows) acc = updateAllRows rows (updateTblsData row ident acc)
 
 
 
@@ -434,21 +434,34 @@ evalTableName (TableAlias filePath ident) = (ident,filePath)
 
 --Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
 evalOrderBy :: OrderClause -> TableDataList -> TableDataList -- needs to get tested 
-evalOrderBy orderClause tablesData =
-  let
-    joinedRows = map concat (transpose (map snd tablesData))
+evalOrderBy orderBy tds = orderedTDL
+  where 
+  (column,dir) = case orderBy of 
+    (OrderByAsc col) -> (col,"asc")
+    (OrderByDesc col) -> (col, "desc")
+  
+  evaledColumn = case (extractColumn column) of 
+    (value, -1) -> error ("Cannot order on a value based column of " ++ value) 
+    (identity, colIndex) ->  getColumn identity colIndex tds 
 
-    lexSorted = sort joinedRows 
+  indexedCol = zip [0..] evaledColumn
+  
+  ordered = (case dir of
+    "asc" -> sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol
+    "desc" -> sortBy (\(_, b1) (_, b2) -> compare b2 b1) indexedCol)
+  
+  resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
+  orderedTDL = remakeDataList (map (fst) ordered) tds resetData
 
-    extractKey = buildSortKeyExtractor orderClause tablesData
-    sorted = case orderClause of
-      OrderByAsc _  -> sortBy (flip $  compareRows extractKey) lexSorted
-      OrderByDesc _ -> sortBy (compareRows extractKey) lexSorted
+  
 
-    slicedRows = map (`splitRowByTables` tablesData) sorted
-    grouped = groupByAlias slicedRows
-  in
-    rebuildTableDataList grouped tablesData
+remakeDataList :: [Int] -> TableDataList -> TableDataList -> TableDataList
+remakeDataList [] _ accTDs = accTDs
+remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
+  where
+  allRows = trace ("allRows at index " ++ show index ++ ": " ++ show (getAllRows index tds)) (getAllRows index tds)
+  updated = updateAllRows allRows accTDs
+
 
 
 
