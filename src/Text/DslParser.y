@@ -105,8 +105,18 @@ Identifier   { TokenIdentifier _ $$ }
 -- SELECT Statement
 -------------------------------
 
+
+
+Stmt
+    : SelectStmt { StmtSelect $1 }
+    | DeleteStmt { StmtDelete $1 }
+
+
 SelectStmt
     : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion { Select $2 $3 $5 $6 $7 $8 $9 $10}
+
+DeleteStmt
+    : DELETE FROM TableName OptWhere { Delete $3 $4}
 
 -- Full grammar statement. Its been simplified for simplicity:
 -- : SELECT OptDistinct ColumnList FROM TableList OptJoin OptWhere OptGroupBy OptHaving OptOrderBy OptLimit OptUnion    
@@ -222,8 +232,15 @@ parseError = error "oops something went wrong"
 
 type Ident = String
 
+data Stmt
+  = StmtSelect SelectStmt
+  | StmtDelete DeleteStmt
+  deriving (Show, Eq)
+
 data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
- 
+
+data DeleteStmt = Delete TableName (Maybe [Condition]) deriving (Show, Eq)
+
 data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)

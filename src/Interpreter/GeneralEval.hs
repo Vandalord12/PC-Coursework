@@ -56,9 +56,18 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
   return finalTable
   
 
-
-
-
+-- evaluate the DELETE statement by Deleting the rows matching conditions and returns the remaining table.
+evalDeleteStmt :: DeleteStmt -> IO Table
+evalDeleteStmt (Delete tableName maybeConds) = do
+  let (ident, filePath) = evalTableName tableName
+  table <- readCSV filePath
+  let filtered = case maybeConds of
+        Nothing -> [] 
+        Just conds ->
+          let tdl = [((ident, filePath), table)]
+              keepRow row = not $ all (\cond -> rowSatisfies row cond tdl) conds
+          in filter keepRow table
+  return filtered
 
 
 
