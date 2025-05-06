@@ -10,6 +10,7 @@ import Interpreter.GeneralEval
 import Text.DslParser (Stmt(StmtDelete))
 import Text.DslParser (Stmt(StmtSelect))
 import Text.DslParser (Stmt(StmtInsert))
+import Text.DslParser (Stmt(StmtUpdate))
 
 
 
@@ -29,6 +30,9 @@ main = do
       writeToCSV "resources/output.csv" result  
     StmtInsert ins -> do 
      result <- evalInsertStmt ins
+     writeToCSV "resources/output.csv" result  
+    StmtUpdate upd -> do 
+     result <- evalUpdateStmt upd
      writeToCSV "resources/output.csv" result  
 
 toIO :: a -> IO a

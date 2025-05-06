@@ -10,6 +10,7 @@ import Data.Ord
 import Data.List (sortBy)
 import Data.Ord (comparing)
 import Debug.Trace
+import Debug.Trace (trace)
 
 type TableSlices = [(Ident, Row)]
 
@@ -91,6 +92,31 @@ evalInsertStmt (Insert filePath rowsToInsert) = do
 
   return updated
 
+
+-- Evaluates an UPDATE statement by applying changes to rows that match the conditions and returns the modified table.
+evalUpdateStmt :: UpdateStmt -> IO Table
+evalUpdateStmt (Update filePath alias assignments conds) = do
+  table <- readCSV filePath
+  let assignIndexVals = [(idx, val) | ((_, idx), val) <- assignments]
+  let tableData = [((alias, filePath), table)] 
+
+  let updatedRows = map
+        (\row ->
+          if all (\cond -> rowSatisfies row cond tableData) conds
+            then applyUpdates row assignIndexVals
+            else row
+        )
+        table
+
+  return updatedRows
+
+  where
+    applyUpdates row updates =
+      [ case lookup i updates of
+          Just val -> evalValue val
+          Nothing  -> oldVal
+      | (i, oldVal) <- zip [0..] row
+      ]
 
 
 

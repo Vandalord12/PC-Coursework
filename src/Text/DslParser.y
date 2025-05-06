@@ -111,6 +111,7 @@ Stmt
     : SelectStmt { StmtSelect $1 }
     | DeleteStmt { StmtDelete $1 }
     | InsertStmt { StmtInsert $1 } 
+    | UpdateStmt { StmtUpdate $1 }
 
 
 SelectStmt
@@ -121,6 +122,11 @@ DeleteStmt
 
 InsertStmt
     : INSERT INTO FilePath VALUES RowList { Insert $3 $5 }
+
+UpdateStmt
+  : UPDATE FilePath AS Identifier SET Assignments WHERE ConditionList { Update $2 $4 $6 $8 }
+
+
 
 
 
@@ -218,6 +224,19 @@ RowList
   | "(" ValueList ")" ',' RowList            { $2 : $5 }
 
 
+
+Assignments
+    : Assignment { [$1] }
+    | Assignment ',' Assignments { $1 : $3 }
+
+
+Assignment
+  : Identifier "[" Integer "]" "=" Value { (($1, $3), $6) }
+
+
+
+
+
 OptOrderBy: 
     ORDER BY Column {Just (OrderByAsc $3)} -- Default value is in ascending order
     | ORDER BY Column ASC {Just (OrderByAsc $3)}
@@ -246,6 +265,7 @@ data Stmt
   = StmtSelect SelectStmt
   | StmtDelete DeleteStmt
   | StmtInsert InsertStmt
+  | StmtUpdate UpdateStmt
   deriving (Show, Eq)
 
 data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
@@ -254,6 +274,7 @@ data DeleteStmt = Delete TableName (Maybe [Condition]) deriving (Show, Eq)
 
 data InsertStmt = Insert FilePath [[Value]] deriving (Show, Eq) 
 
+data UpdateStmt = Update FilePath Ident [((Ident, Int), Value)] [Condition] deriving (Show, Eq) 
 
 data Distinct = Distinct deriving (Show, Eq)
 
