@@ -84,13 +84,13 @@ selectedColumns [] _ accTDs = accTDs
 selectedColumns (col:cols) tds accTDs = selectedColumns cols tds newTblsData
   where
   (ident,_) = extractColumn col
-  evaledCol = debugExpr "evaledColumn: " (evalColumn col tds)
+  evaledCol = evalColumn col tds
   
-  alreadyExists =  debugExpr "table Exists?: " (any (\((id,_),_) -> (ident == id)) accTDs) -- checks if table already in resetData
+  alreadyExists =  any (\((id,_),_) -> (ident == id)) accTDs -- checks if table already in resetData
 
   newTblsData = case alreadyExists of
-    True -> debugExpr "Updated tablelist: " (transposeTblData ident (updateTblsData evaledCol ident accTDs))
-    False -> debugExpr "Updated tablelist: "  (transposeTblData ident (accTDs ++ (((ident,""),[evaledCol]):[])))
+    True -> transposeTblData ident (updateTblsData evaledCol ident accTDs)
+    False -> transposeTblData ident (accTDs ++ (((ident,""),[evaledCol]):[]))
 
 
 transposeTblData :: Ident -> TableDataList -> TableDataList
@@ -180,7 +180,7 @@ evalJoin jc tds = do
   let (joinType, tableName, onCond) = extractJoin jc
   let (tableIdent,filePath) = evalTableName tableName -- get the tables info
 
-  let alreadyExists = debugExpr "alreadyExists: " (any (\((ident,fp),_) -> (ident == tableIdent) || (fp == filePath)) tds) -- checks if table already in tds
+  let alreadyExists = (any (\((ident,fp),_) -> (ident == tableIdent) || (fp == filePath)) tds) -- checks if table already in tds
 
   newTblsData <- (case alreadyExists of
     True -> return tds -- If already exists, dont add it to the list
@@ -236,7 +236,7 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
     indexRCol = zip [0..] evaledRightColumn -- index the values of the column
 
     crossLeftCol = zip [0..] (findLeftColumnForCross tds)
-    --y = debugExpr (indexLCol,indexRCol)
+    
 
     resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
 
@@ -332,7 +332,7 @@ getAllRows row tds = firstFullRow
   firstFullRow = map (\((id,_),tbl) -> (id,(tbl !! row))) tds
 
 getColumn :: Ident -> Int -> TableDataList -> [String]
-getColumn ident colNum tds = (debugExpr "getColumn: " (transpose (getTableById ident tds))) !! colNum
+getColumn ident colNum tds = (transpose (getTableById ident tds)) !! colNum
 
 
 getTableDataById :: Ident -> TableDataList -> TableData
@@ -498,10 +498,10 @@ evalOrderBy orderBy tds = orderedTDL
     (ident, -1) -> error ("Cannot order on a value based column of identity " ++ ident) 
     (identity, colIndex) ->  getColumn identity colIndex tds 
 
-  indexedCol = zip [0..] (debugExpr "orderBY: " evaledColumn)
+  indexedCol = zip [0..] evaledColumn
   
   ordered = (case dir of
-    "asc" -> debugExpr "orderBySort: " (sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol)
+    "asc" -> sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol
     "desc" -> sortBy (\(_, b1) (_, b2) -> compare b2 b1) indexedCol)
   
   resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
