@@ -112,8 +112,7 @@ Stmt
     | DeleteStmt { StmtDelete $1 }
     | InsertStmt { StmtInsert $1 } 
     | UpdateStmt { StmtUpdate $1 }
-
-
+    
 SelectStmt
     : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion { Select $2 $3 $5 $6 $7 $8 $9 $10}
 
@@ -148,7 +147,7 @@ ColumnList:
 Column:
     Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
-    | COALESCE "(" Column ',' Column ")" { ColumnCoalesce $3 $5 }
+    | COALESCE "(" Column ',' Column ")" AS Identifier { ColumnCoalesce $3 $5 $8}
 
 TableName:
     FilePath AS Identifier {TableAlias $1 $3}
@@ -169,7 +168,7 @@ Join:
     | LEFT JOIN TableName ON OnCondition {LeftJoin $3 $5}
     | RIGHT JOIN TableName ON OnCondition {RightJoin $3 $5}
     | FULL JOIN TableName ON OnCondition {FullJoin $3 $5}
-    | CROSS JOIN TableName {CrossJoin $3}
+    | CROSS JOIN TableName ON OnCondition {CrossJoin $3 $5}
 
 OnCondition:
     Column "=" Column             { OnColEquals $1 $3 }
@@ -241,6 +240,7 @@ OptOrderBy:
     ORDER BY Column {Just (OrderByAsc $3)} -- Default value is in ascending order
     | ORDER BY Column ASC {Just (OrderByAsc $3)}
     | ORDER BY Column DESC {Just (OrderByDesc $3)}
+    | ORDER ALL {Just (OrderAll)}
     | {Nothing}
 
 OptLimit:
@@ -280,7 +280,7 @@ data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column deriving (Show, Eq)
+data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column Ident deriving (Show, Eq)
 
 data TableName = TableAlias FilePath Ident deriving (Show, Eq)
 
@@ -291,7 +291,7 @@ data JoinClause
     | LeftJoin TableName OnCondition
     | RightJoin TableName OnCondition
     | FullJoin TableName OnCondition
-    | CrossJoin TableName
+    | CrossJoin TableName OnCondition
     deriving (Show, Eq)
 
 data OnCondition
@@ -330,6 +330,7 @@ data Value
 data OrderClause
     = OrderByAsc Column
     | OrderByDesc Column
+    | OrderAll
     deriving (Show, Eq)
 
 data LimitClause
