@@ -110,6 +110,7 @@ Identifier   { TokenIdentifier _ $$ }
 Stmt
     : SelectStmt { StmtSelect $1 }
     | DeleteStmt { StmtDelete $1 }
+    | InsertStmt { StmtInsert $1 } 
 
 
 SelectStmt
@@ -117,6 +118,11 @@ SelectStmt
 
 DeleteStmt
     : DELETE FROM TableName OptWhere { Delete $3 $4}
+
+InsertStmt
+    : INSERT INTO FilePath VALUES RowList { Insert $3 $5 }
+
+
 
 -- Full grammar statement. Its been simplified for simplicity:
 -- : SELECT OptDistinct ColumnList FROM TableList OptJoin OptWhere OptGroupBy OptHaving OptOrderBy OptLimit OptUnion    
@@ -207,6 +213,10 @@ Value:
     | Number { ValNumber $1 } 
     | Identifier { ValIdent $1 }
 
+RowList
+  : "(" ValueList ")"                         { [$2] }
+  | "(" ValueList ")" ',' RowList            { $2 : $5 }
+
 
 OptOrderBy: 
     ORDER BY Column {Just (OrderByAsc $3)} -- Default value is in ascending order
@@ -235,11 +245,15 @@ type Ident = String
 data Stmt
   = StmtSelect SelectStmt
   | StmtDelete DeleteStmt
+  | StmtInsert InsertStmt
   deriving (Show, Eq)
 
 data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
 
 data DeleteStmt = Delete TableName (Maybe [Condition]) deriving (Show, Eq)
+
+data InsertStmt = Insert FilePath [[Value]] deriving (Show, Eq) 
+
 
 data Distinct = Distinct deriving (Show, Eq)
 

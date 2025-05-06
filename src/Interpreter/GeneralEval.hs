@@ -71,6 +71,27 @@ evalDeleteStmt (Delete tableName maybeConds) = do
 
 
 
+-- Evaluate the INSERT statement by appending one or more rows to the CSV table.
+-- Note it won't allow you insert more columns than what the exsisting file contain.
+evalInsertStmt :: InsertStmt -> IO Table
+evalInsertStmt (Insert filePath rowsToInsert) = do
+  rows <- readCSV filePath
+
+  let columnCount = if null rows then length (head rowsToInsert) else length (head rows)
+
+  let convertedRows = map
+        (\vals ->
+          if length vals /= columnCount
+            then error $ "Row has " ++ show (length vals) ++ " values, expected " ++ show columnCount
+            else map evalValue vals
+        )
+        rowsToInsert
+
+  let updated = rows ++ convertedRows
+
+  return updated
+
+
 
 
 

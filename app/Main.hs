@@ -9,11 +9,13 @@ import Interpreter.Csv
 import Interpreter.GeneralEval
 import Text.DslParser (Stmt(StmtDelete))
 import Text.DslParser (Stmt(StmtSelect))
+import Text.DslParser (Stmt(StmtInsert))
+
 
 
 main :: IO ()
 main = do
-  code <- readFile "resources/t2.cql" -- fix the task you want to test in here 
+  code <- readFile "resources/t1.cql" -- fix the task you want to test in here 
   let tokens = alexScanTokens code
   let ast = dslParser tokens
   putStrLn (show tokens)
@@ -25,6 +27,9 @@ main = do
     StmtDelete del -> do
       result <- evalDeleteStmt del
       writeToCSV "resources/output.csv" result  
+    StmtInsert ins -> do 
+     result <- evalInsertStmt ins
+     writeToCSV "resources/output.csv" result  
 
 toIO :: a -> IO a
 toIO x = return x
