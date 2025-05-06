@@ -148,7 +148,7 @@ Join:
     | LEFT JOIN TableName ON OnCondition {LeftJoin $3 $5}
     | RIGHT JOIN TableName ON OnCondition {RightJoin $3 $5}
     | FULL JOIN TableName ON OnCondition {FullJoin $3 $5}
-    | CROSS JOIN TableName {CrossJoin $3}
+    | CROSS JOIN TableName ON OnCondition {CrossJoin $3 $5}
 
 OnCondition:
     Column "=" Column             { OnColEquals $1 $3 }
@@ -241,7 +241,7 @@ data JoinClause
     | LeftJoin TableName OnCondition
     | RightJoin TableName OnCondition
     | FullJoin TableName OnCondition
-    | CrossJoin TableName
+    | CrossJoin TableName OnCondition
     deriving (Show, Eq)
 
 data OnCondition
