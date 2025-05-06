@@ -18,7 +18,7 @@ type TableDataList = [TableData]
 type TableData = ((Ident,FilePath),Table)
 
 
-debugExpr x = traceShow x "HI"
+debugExpr label x = trace (label ++ (show x)) x
 
 -- evaluate the select statement by chaining together all the possible table operations
 evalSelectStmt :: SelectStmt -> IO Table
@@ -30,24 +30,28 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
   joinsTDL <- case optJcs of
     Just jcs -> evalJoins jcs tableDataList
     Nothing  -> return tableDataList
-
+  putStrLn (show joinsTDL)
   let condsTDL = case optConds of
         Just conds -> evalConditions joinsTDL conds
         Nothing    -> joinsTDL
 
+  putStrLn (show condsTDL)
+  let colsTDL = evalColumns cols condsTDL
+  putStrLn (show colsTDL)
+
   let orderTDL = case optOrd of
-        Just orderc -> evalOrderBy orderc condsTDL
-        Nothing     -> condsTDL
+        Just orderc -> evalOrderBy orderc colsTDL
+        Nothing     -> colsTDL
 
   let limitTDL = case optLimit of
         Just limit -> evalLimit limit orderTDL
         Nothing    -> orderTDL
 
-  let colsTable = evalColumns cols limitTDL
-
+  let converted = convertToTable limitTDL
+  putStrLn (show converted)
   let distTable = case optDist of
-        Just _  -> evalDistinct colsTable
-        Nothing -> colsTable
+        Just _  -> evalDistinct converted
+        Nothing -> converted
 
   finalTable <- case optUnion of
         Just sstmt -> evalUnion distTable sstmt
@@ -66,32 +70,52 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
 
 
 -- Evaluates all the columns
-evalColumns :: Columns -> TableDataList -> Table
+evalColumns :: Columns -> TableDataList -> TableDataList
 evalColumns cols tds = case cols of
-    (SelectAllColumns) -> transpose $ allColumns tds
-    (SelectColumns cs) -> transpose $ selectedColumns cs tds
-
--- Helper function to evalColumns
-allColumns :: TableDataList -> Table
-allColumns tds = combineTables tbls
+    (SelectAllColumns) -> tds
+    (SelectColumns cs) -> clean (selectedColumns cs tds (map (\(info,tbl) -> (info,[])) tds))
   where
-  tbls = map (snd) tds
+  clean :: TableDataList -> TableDataList
+  clean tds = filter (\((_,_),tbl) -> not $ null tbl) tds
 
--- same funcition as the cartesion one in evaluator
-combineTables :: [Table] -> Table
-combineTables [] = []
-combineTables (t:ts) = (transpose t) ++ combineTables ts
 
--- Helper function to evalColumns
-selectedColumns :: [Column] -> TableDataList -> Table 
-selectedColumns [] _ = []
-selectedColumns (col:cols) tds = extractedCol : selectedColumns cols tds
+selectedColumns :: [Column] -> TableDataList -> TableDataList -> TableDataList
+selectedColumns [] _ accTDs = accTDs
+selectedColumns (col:cols) tds accTDs = selectedColumns cols tds newTblsData
   where
-    extractedCol = case col of
-      ColumnCoalesce c1 c2 -> evalCoalesce c1 c2 tds
-      _ -> case extractColumn col of
-             (value, -1) -> replicate (length (snd $ head tds)) value
-             (identity, colIndex) -> getColumn identity colIndex tds
+  (ident,_) = extractColumn col
+  evaledCol = debugExpr "evaledColumn: " (evalColumn col tds)
+  
+  alreadyExists =  debugExpr "table Exists?: " (any (\((id,_),_) -> (ident == id)) accTDs) -- checks if table already in resetData
+
+  newTblsData = case alreadyExists of
+    True -> debugExpr "Updated tablelist: " (transposeTblData ident (updateTblsData evaledCol ident accTDs))
+    False -> debugExpr "Updated tablelist: "  (transposeTblData ident (accTDs ++ (((ident,""),[evaledCol]):[])))
+
+
+transposeTblData :: Ident -> TableDataList -> TableDataList
+transposeTblData _ [] = []
+transposeTblData identity (((ident,fp),tbl):tds) | ident == identity = (((ident,fp),transpose tbl):tds)
+                                                   | otherwise = ((ident,fp),tbl):transposeTblData identity tds
+
+evalCoalesce :: Column -> Column -> TableDataList -> [String]
+evalCoalesce c1 c2 tds =
+  let col1 = evalColumn c1 tds
+      col2 = evalColumn c2 tds
+  in zipWith (\x y -> if x == "" then y else x) col1 col2
+
+
+
+evalColumn :: Column -> TableDataList -> [String]
+evalColumn col tds = evaledColumn
+  where
+  evaledColumn = case col of
+    ColumnByValue val ident -> replicate (length (snd $ head tds)) (evalValue val)
+    ColumnByIndex ident index -> getColumn ident index tds
+    ColumnCoalesce col1 col2 _ -> evalCoalesce col1 col2 tds
+
+
+
 
 
 
@@ -104,18 +128,18 @@ evalUnion tbl stmt = do
   return (combineTables (tbl : evaledSelect : []))
 
 
-evalCoalesce :: Column -> Column -> TableDataList -> [String]
-evalCoalesce c1 c2 tds =
-  let col1 = extractColumnOrValue c1 tds
-      col2 = extractColumnOrValue c2 tds
-  in zipWith (\x y -> if x == "" then y else x) col1 col2
 
 
-extractColumnOrValue :: Column -> TableDataList -> [String]
-extractColumnOrValue col tds =
-  case extractColumn col of
-    (val, -1) -> replicate (length (snd $ head tds)) val
-    (ident, idx) -> getColumn ident idx tds
+
+convertToTable :: TableDataList -> Table
+convertToTable tds = transpose $ combineTables tbls
+  where
+  tbls = map (snd) tds
+
+
+combineTables :: [Table] -> Table
+combineTables [] = []
+combineTables (t:ts) = (transpose t) ++ combineTables ts
 
 
 
@@ -156,7 +180,7 @@ evalJoin jc tds = do
   let (joinType, tableName, onCond) = extractJoin jc
   let (tableIdent,filePath) = evalTableName tableName -- get the tables info
 
-  let alreadyExists = any (\((ident,fp),_) -> (ident == tableIdent) || (fp == filePath)) tds -- checks if table already in tds
+  let alreadyExists = debugExpr "alreadyExists: " (any (\((ident,fp),_) -> (ident == tableIdent) || (fp == filePath)) tds) -- checks if table already in tds
 
   newTblsData <- (case alreadyExists of
     True -> return tds -- If already exists, dont add it to the list
@@ -177,11 +201,11 @@ identifyLRTbls :: Ident -> Column -> Column -> (Column,Column)
 identifyLRTbls ident col1 col2 = (left,right)
   where
   id1 = case (extractColumn col1) of
-    (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+    (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
     (identity, _) ->  identity
 
   id2 = case (extractColumn col2) of
-    (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+    (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
     (identity, _) ->  identity
 
   (left,right) = case (ident == id1) of
@@ -201,11 +225,11 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
 
   where
     (lId,evaledLeftColumn) = case (extractColumn leftCol) of -- get the left/first column in the on condition 
-      (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+      (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
       (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
     (rId,evaledRightColumn) = case (extractColumn rightCol) of -- get the right/second column in the on condition
-      (value, -1) -> error ("Cannot join on a value based column of " ++ value) 
+      (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
       (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
     indexLCol = zip [0..] evaledLeftColumn -- index the values of the column
@@ -308,7 +332,7 @@ getAllRows row tds = firstFullRow
   firstFullRow = map (\((id,_),tbl) -> (id,(tbl !! row))) tds
 
 getColumn :: Ident -> Int -> TableDataList -> [String]
-getColumn ident colNum tds = (transpose (getTableById ident tds)) !! colNum
+getColumn ident colNum tds = (debugExpr "getColumn: " (transpose (getTableById ident tds))) !! colNum
 
 
 getTableDataById :: Ident -> TableDataList -> TableData
@@ -433,8 +457,8 @@ compareVal colStr value f =
 
 extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
-extractColumn (ColumnByValue val ident) = (evalValue val, -1)
-extractColumn (ColumnCoalesce c1 _) = extractColumn c1
+extractColumn (ColumnByValue val ident) = (ident, -1)
+extractColumn (ColumnCoalesce c1 c2 ident) = (ident, -2)
 
 
 
@@ -453,7 +477,17 @@ evalTableName (TableAlias filePath ident) = (ident,filePath)
 
 
 --Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
-evalOrderBy :: OrderClause -> TableDataList -> TableDataList -- needs to get tested 
+evalOrderBy :: OrderClause -> TableDataList -> TableDataList -- needs to get tested
+evalOrderBy (OrderAll) tds = orderedTDL
+
+  where
+  numOfRows = length (snd $ head tds)
+  allRows = map (\i -> getAllRows i tds) [0..(numOfRows -1)]
+  indexedRows = zip [0..] allRows
+  ordered = sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedRows
+  resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
+  orderedTDL = remakeDataList (map (fst) ordered) tds resetData
+
 evalOrderBy orderBy tds = orderedTDL
   where 
   (column,dir) = case orderBy of 
@@ -461,13 +495,13 @@ evalOrderBy orderBy tds = orderedTDL
     (OrderByDesc col) -> (col, "desc")
   
   evaledColumn = case (extractColumn column) of 
-    (value, -1) -> error ("Cannot order on a value based column of " ++ value) 
+    (ident, -1) -> error ("Cannot order on a value based column of identity " ++ ident) 
     (identity, colIndex) ->  getColumn identity colIndex tds 
 
-  indexedCol = zip [0..] evaledColumn
+  indexedCol = zip [0..] (debugExpr "orderBY: " evaledColumn)
   
   ordered = (case dir of
-    "asc" -> sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol
+    "asc" -> debugExpr "orderBySort: " (sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol)
     "desc" -> sortBy (\(_, b1) (_, b2) -> compare b2 b1) indexedCol)
   
   resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
@@ -479,8 +513,13 @@ remakeDataList :: [Int] -> TableDataList -> TableDataList -> TableDataList
 remakeDataList [] _ accTDs = accTDs
 remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
   where
-  allRows = trace ("allRows at index " ++ show index ++ ": " ++ show (getAllRows index tds)) (getAllRows index tds)
+  allRows = getAllRows index tds
   updated = updateAllRows allRows accTDs
+
+
+
+  
+
 
 
 

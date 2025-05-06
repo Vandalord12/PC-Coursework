@@ -105,6 +105,7 @@ Identifier   { TokenIdentifier _ $$ }
 -- SELECT Statement
 -------------------------------
 
+
 SelectStmt
     : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion { Select $2 $3 $5 $6 $7 $8 $9 $10}
 
@@ -126,7 +127,7 @@ ColumnList:
 Column:
     Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
-    | COALESCE "(" Column ',' Column ")" { ColumnCoalesce $3 $5 }
+    | COALESCE "(" Column ',' Column ")" AS Identifier { ColumnCoalesce $3 $5 $8}
 
 TableName:
     FilePath AS Identifier {TableAlias $1 $3}
@@ -202,6 +203,7 @@ OptOrderBy:
     ORDER BY Column {Just (OrderByAsc $3)} -- Default value is in ascending order
     | ORDER BY Column ASC {Just (OrderByAsc $3)}
     | ORDER BY Column DESC {Just (OrderByDesc $3)}
+    | ORDER ALL {Just (OrderAll)}
     | {Nothing}
 
 OptLimit:
@@ -228,7 +230,7 @@ data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column deriving (Show, Eq)
+data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column Ident deriving (Show, Eq)
 
 data TableName = TableAlias FilePath Ident deriving (Show, Eq)
 
@@ -278,6 +280,7 @@ data Value
 data OrderClause
     = OrderByAsc Column
     | OrderByDesc Column
+    | OrderAll
     deriving (Show, Eq)
 
 data LimitClause
