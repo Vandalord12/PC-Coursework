@@ -1,6 +1,4 @@
-SELECT A[2], A[0] 
+SELECT A[0], B[0]
 FROM "resources/A.csv" AS A 
-WHERE A[0] = A[1]
-ORDER BY A[2] 
-
---DELETE FROM "resources/A.csv" AS A WHERE A[0] = "Brenda"
+CROSS JOIN "resources/B.csv" AS B ON A[0] = B[0]
+ORDER BY A[0]
