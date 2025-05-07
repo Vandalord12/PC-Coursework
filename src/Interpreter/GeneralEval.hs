@@ -65,7 +65,7 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
   
 
 
---evaluate the DELETE statement by Deleting the rows matching conditions and returns the remaining table.
+-- evaluate the DELETE statement by Deleting the rows matching conditions and returns the remaining table.
 evalDeleteStmt :: DeleteStmt -> IO Table
 evalDeleteStmt (Delete tableName maybeConds) = do
   let (ident, filePath) = evalTableName tableName

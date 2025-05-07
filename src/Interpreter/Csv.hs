@@ -35,9 +35,10 @@ splitComma (x:xs) =
 readCSV :: FilePath -> IO Table
 readCSV path = do
   contents <- readFile path
-  let allLines = lines contents                 -- Split file into lines
-      parsed = map parseRow allLines       -- Parse each line into a Row
+  let allLines = filter (not . all isSpace) (lines contents)  
+      parsed = map parseRow allLines
   return parsed
+
 
 
 -- Converts a single Row list of Strings into a csv format 
