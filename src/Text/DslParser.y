@@ -96,6 +96,9 @@ Identifier   { TokenIdentifier _ $$ }
 %left ">"
 %left "<="
 %left ">="
+%left OR
+%left AND
+
 
 %%
 
@@ -184,9 +187,10 @@ OptWhere: WHERE ConditionList { Just $2 } | { Nothing }
 
 
 ConditionList: 
-    Condition { [$1] } 
-    | Condition AND ConditionList { $1 : $3 }
-    | Condition OR ConditionList  { $1 : $3 }
+    Condition { TerminalCondition $1 }
+    | "("ConditionList")" {$2}
+    | ConditionList AND ConditionList { AndCondition $1 $3 }
+    | ConditionList OR ConditionList  { OrCondition $1 $3 }
 
 
 Condition: 
@@ -269,13 +273,13 @@ data Stmt
   | StmtUpdate UpdateStmt
   deriving (Show, Eq)
 
-data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe [Condition]) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
+data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe ConditionList) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
 
-data DeleteStmt = Delete TableName (Maybe [Condition]) deriving (Show, Eq)
+data DeleteStmt = Delete TableName (Maybe ConditionList) deriving (Show, Eq)
 
 data InsertStmt = Insert FilePath [[Value]] deriving (Show, Eq) 
 
-data UpdateStmt = Update FilePath Ident [((Ident, Int), Value)] [Condition] deriving (Show, Eq) 
+data UpdateStmt = Update FilePath Ident [((Ident, Int), Value)] ConditionList deriving (Show, Eq) 
 
 data Distinct = Distinct deriving (Show, Eq)
 
@@ -302,6 +306,12 @@ data OnCondition
     | OnColGreaterThan Column Column
     | OnColLessThanEq Column Column
     | OnColGreaterThanEq Column Column
+    deriving (Show, Eq)
+
+data ConditionList = 
+    AndCondition ConditionList ConditionList 
+    | OrCondition ConditionList ConditionList 
+    | TerminalCondition Condition
     deriving (Show, Eq)
 
 data Condition

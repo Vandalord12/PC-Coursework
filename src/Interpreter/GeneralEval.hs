@@ -39,21 +39,22 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
   
   let (fullTable,outputTable) = evalColumns cols condsTDL
   
-  putStrLn ("Cols: " ++ show outputTable)
+  putStrLn ("Output columns:\n" ++ (show outputTable) ++ "\n")
 
   let orderTDL = case optOrd of
         Just orderc -> evalOrderBy orderc fullTable outputTable
         Nothing     -> outputTable
   
-  let limitTDL = case optLimit of
-        Just limit -> evalLimit limit orderTDL
-        Nothing    -> orderTDL
 
-  let converted = convertToTable limitTDL
+  let converted = convertToTable orderTDL
+
+  let limitTDL = case optLimit of
+        Just limit -> evalLimit limit converted
+        Nothing    -> converted
   
   let distTable = case optDist of
-        Just _  -> evalDistinct converted
-        Nothing -> converted
+        Just _  -> evalDistinct limitTDL
+        Nothing -> limitTDL
 
   finalTable <- case optUnion of
         Just sstmt -> evalUnion distTable sstmt
@@ -72,7 +73,7 @@ evalDeleteStmt (Delete tableName maybeConds) = do
         Nothing -> [] 
         Just conds ->
           let tdl = [((ident, filePath), table)]
-              keepRow row = not $ all (\cond -> rowSatisfies row cond tdl) conds
+              keepRow row = not $ evalCondOnRow conds row tdl
           in filter keepRow table
   return filtered
 
@@ -108,7 +109,8 @@ evalUpdateStmt (Update filePath alias assignments conds) = do
 
   let updatedRows = map
         (\row ->
-          if all (\cond -> rowSatisfies row cond tableData) conds
+          
+          if evalCondOnRow conds row tableData
             then applyUpdates row assignIndexVals
             else row
         )
@@ -173,7 +175,7 @@ evalColumn col tds = evaledColumn
   where
   evaledColumn = case col of
     ColumnByValue val ident -> replicate (length (snd $ head tds)) (evalValue val)
-    ColumnByIndex ident index -> debugExpr "byIndex: " (getColumn ident index tds)
+    ColumnByIndex ident index -> getColumn ident index tds
     ColumnCoalesce col1 col2 _ -> evalCoalesce col1 col2 tds
     ColumnByIndexAlias ident index id -> (getColumn ident index tds)
 
@@ -227,7 +229,7 @@ evalJoins :: [JoinClause] -> TableDataList -> IO TableDataList
 evalJoins [] tds = return tds
 evalJoins (j:js) tds = do 
   evaledJoin <- evalJoin j tds
-  putStrLn ("Join:  " ++ show evaledJoin)
+  putStrLn ("Table list after join:\n" ++ (show evaledJoin) ++ "\n")
   evalJoins js (evaledJoin)
 
 
@@ -260,8 +262,8 @@ evalJoin jc tds = do
   let (condFunc, (col1, col2)) = evalOnCondition onCond
   let (leftCol, rightCol) = identifyLRTbls tableIdent col1 col2
 
-  putStrLn ("Columns loaded: " ++ show (leftCol, rightCol))
-  putStrLn("Tables List: " ++ show newTblsData)
+  putStrLn ("Columns loaded:\n" ++ (show (leftCol, rightCol)) ++ "\n")
+  putStrLn("Table list before join:\n" ++ (show newTblsData)  ++ "\n")
   return $ helperJoin newTblsData joinType tableIdent condFunc leftCol rightCol
 
 
@@ -289,7 +291,7 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
   "Left" -> makeTableDataList lId rId (leftJoin indexLCol indexRCol onCondFunc) tds resetData
   "Right" -> makeTableDataList rId lId (rightJoin indexLCol indexRCol onCondFunc) tds resetData
   "Full" -> makeTableDataList lId rId (fullJoin indexLCol indexRCol onCondFunc) tds resetData
-  "Cross" -> crossJoin lId rId tds)
+  "Cross" -> makeTableDataList lId rId (crossJoin indexLCol indexRCol) tds resetData)
 
   where
     (lId,evaledLeftColumn) = case (extractColumn leftCol) of -- get the left/first column in the on condition 
@@ -300,26 +302,14 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
       (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
       (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
-    indexLCol = zip [0..] evaledLeftColumn -- index the values of the column
-    indexRCol = zip [0..] evaledRightColumn -- index the values of the column
+    indexLCol = debugExpr "indexLCol: " (zip [0..] evaledLeftColumn) -- index the values of the column
+    indexRCol = debugExpr "indexRCol: " (zip [0..] evaledRightColumn) -- index the values of the column
 
   
     resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
 
 
-crossJoin :: Ident -> Ident -> TableDataList -> TableDataList
-crossJoin lId rId tds = updateTblData lId ctbl tds
-  where
-  ltbl = case getTableById lId tds of
-    Just tbl -> tbl
-    Nothing -> []
-  rtbl = case getTableById rId tds of
-    Just tbl -> tbl
-    Nothing -> []
-  ctbl = crossTables ltbl rtbl
 
-crossTables :: Table -> Table -> Table
-crossTables t1 t2 = [row1 ++ row2 | row1 <- t1, row2 <- t2]
 
 updateTblData :: Ident -> Table -> TableDataList -> TableDataList
 updateTblData _ _ [] = []
@@ -345,49 +335,57 @@ evalOnCondition (OnColGreaterThanEq col1 col2) = ((>=),(col1,col2))
 
 
 
--- Custom check to see if two values satisfy a condition. The row index if true, and -1 if false
-check :: String -> String -> Int -> (String -> String -> Bool) -> Int
-check val1 val2 index f | f val1 val2 = index
-                        | otherwise = -1
+
+
+
+fullCheck :: String -> [(Int,String)] -> (String -> String -> Bool) -> [Int]
+fullCheck val indexedVals f | null matching = [-1]
+                            | otherwise = map (fst) matching
+  where
+  matching = filter (\(i,value) -> f val value) indexedVals
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 innerJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 innerJoin [] _ _ = []
-innerJoin ((leftI,leftVal):ls) rs f = [(leftI,rightI) | (rightI,rightVal) <- rs, (debugExpr ("Values: (" ++ leftVal ++ ", " ++ rightVal ++ ") Outcome: ") (f leftVal rightVal))] ++ (innerJoin ls rs f)
+innerJoin ((leftI,leftVal):ls) rs f = [(leftI,rightI) | (rightI,rightVal) <- rs, (f leftVal rightVal)] ++ (innerJoin ls rs f)
 
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 leftJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 leftJoin [] _ _ = []
-leftJoin ((leftI,leftVal):ls) rs f = [(leftI, check leftVal rightVal rightI f) | (rightI, rightVal) <- rs] ++ (leftJoin ls rs f)
-
+leftJoin ((leftI,leftVal):ls) rs f = (map (\x -> (leftI, x)) (fullCheck leftVal rs f)) ++  (leftJoin ls rs f)
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 rightJoin ::[(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
 rightJoin _ [] _ = []
-rightJoin ls ((rightI,rightVal):rs) f = [(rightI,check rightVal leftVal leftI f) | (leftI, leftVal) <- ls] ++ (rightJoin ls rs f)
-
+--rightJoin ls ((rightI,rightVal):rs) f = [(rightI,check rightVal leftVal leftI f) | (leftI, leftVal) <- ls] ++ (rightJoin ls rs f)
+rightJoin ls ((rightI,rightVal):rs) f = (map (\x -> (rightI, x)) (fullCheck rightVal ls f)) ++  (rightJoin ls rs f)
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 fullJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
-fullJoin ls rs f = nub ((leftJoin ls rs f) ++ (rightJoin ls rs f))
+fullJoin ls rs f = nub ((debugExpr "leftJoin: " (leftJoin ls rs f)) ++ (debugExpr "rightJoin :" (map (\(r,l) -> (l,r)) (rightJoin ls rs f))))
 
+crossJoin :: [(Int, String)] -> [(Int, String)] -> [(Int,Int)]
+crossJoin ls rs = [(leftI,rightI) | (leftI,_) <- ls, (rightI,_) <- rs]
 
 
 -- Iterates over the matching rows and makes a new table data list based on it
 makeTableDataList :: Ident -> Ident -> [(Int,Int)] -> TableDataList -> TableDataList -> TableDataList
-makeTableDataList _ _ [] _ accTbls = clean accTbls
+makeTableDataList _ _ [] _ accTbls = accTbls
 makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList leftId rightId as tds updated 
   
   
   where
-  lrow = case (getTableById leftId tds) of
-    Just tbl -> tbl !! li -- gets the row of index li from the current table data list
-    Nothing -> []
-  rrow = case ri of -- gets the row of index ri from the current table data list 
+  lrow = debugExpr "\nlrow:\n" (case li of 
+    (-1) -> replicate (getTableArity leftId tds) "" -- if the index (li) is invalid fill the space with empty strings
+    (l) -> case (getTableById leftId tds) of
+      Just tbl -> (tbl !! li) -- gets the row of index li from the current table data list
+      Nothing -> [])
+
+  rrow = debugExpr "\nrrow:\n" (case ri of -- gets the row of index ri from the current table data list 
     (-1) -> replicate (getTableArity rightId tds) "" -- if the index (ri) is invalid fill the space with empty strings
     (r) -> case (getTableById rightId tds) of 
-      Just tbl -> tbl !! r
-      Nothing -> []
+      Just tbl -> (tbl !! r)
+      Nothing -> [])
 
-  updated = updateTblsData rrow rightId (updateTblsData lrow leftId accTbls) -- update the new table data list
+  updated = updateTblsData lrow leftId (updateTblsData rrow rightId accTbls) -- update the new table data list
 
 
 
@@ -436,12 +434,15 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
 
 updateAllRows :: [(Ident,[String])] -> TableDataList -> TableDataList
 updateAllRows [] acc = acc
-updateAllRows ((ident,row):rows) acc = updateAllRows rows (debugExpr "updatedTable: " (updateTblsData row ident acc))
+updateAllRows ((ident,row):rows) acc = updateAllRows rows (updateTblsData row ident acc)
 
 
 
 
-
+evalCondOnRow :: ConditionList -> Row -> TableDataList -> Bool
+evalCondOnRow (AndCondition clist1 clist2) row tds = (evalCondOnRow clist1 row tds) && (evalCondOnRow clist2 row tds)
+evalCondOnRow (OrCondition clist1 clist2) row tds = (evalCondOnRow clist1 row tds) || (evalCondOnRow clist2 row tds)
+evalCondOnRow (TerminalCondition cond) row tds = rowSatisfies row cond tds
 
 
 
@@ -449,7 +450,7 @@ updateAllRows ((ident,row):rows) acc = updateAllRows rows (debugExpr "updatedTab
 -- Filters rows from the Cartesian product that satisfy all conditions.
   -- Filters rows from the Cartesian product that satisfy all conditions.
 
-evalConditions :: TableDataList -> [Condition] -> TableDataList
+evalConditions :: TableDataList -> ConditionList -> TableDataList
 evalConditions tablesData conds =
   let
     -- Sort the tables by alias so A comes before B
@@ -459,8 +460,8 @@ evalConditions tablesData conds =
     joinedRows = map concat (transpose (map snd sortedTables))
 
     -- Filter based on WHERE
-    filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond sortedTables) conds) joinedRows
-
+    --filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond sortedTables) conds) joinedRows
+    filteredRows = filter (\row -> evalCondOnRow conds row sortedTables) joinedRows
     -- Re-split by alias
     splitRows = map (`splitRowByTables` sortedTables) filteredRows
     grouped = groupByAlias splitRows
@@ -468,7 +469,7 @@ evalConditions tablesData conds =
     rebuildTableDataList grouped sortedTables
 
 
-
+-- if 
 
 
 
@@ -567,7 +568,7 @@ evalOrderBy (OrderAll) tds outTDs | (length $ clean tds) < 1 = []
   where
   allRows = convertToTable outTDs
   indexedRows = zip [0..] allRows
-  ordered = debugExpr "orderedRows: " (sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedRows)
+  ordered = sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedRows
 
 
   resetData = map (\(info,tbl) -> (info,[])) outTDs -- gives tds with each table being cleared
@@ -598,7 +599,7 @@ remakeDataList :: [Int] -> TableDataList -> TableDataList -> TableDataList
 remakeDataList [] _ accTDs = accTDs
 remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
   where
-  allRows = debugExpr ("Rows at index " ++(show index) ++ ": ") (getAllRows index tds)
+  allRows = getAllRows index tds
   updated = updateAllRows allRows accTDs
 
 
@@ -607,17 +608,11 @@ remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
 
 
 -- Applies the LIMIT clause to the combined rows from all tables, then reconstructs the result into a TableDataList.
-evalLimit :: LimitClause -> TableDataList -> TableDataList -- not tested yet 
-evalLimit limitClause tablesData =
-  let
-    joinedRows = map concat (transpose (map snd tablesData))
-    limitedRows = case limitClause of
-      Limit n -> take n joinedRows
-      LimitOffset offset n -> take n (drop offset joinedRows)
-    splitRows = map (`splitRowByTables` tablesData) limitedRows
-    grouped = groupByAlias splitRows
-  in
-    rebuildTableDataList grouped tablesData
+evalLimit :: LimitClause -> Table -> Table  
+evalLimit (Limit num) tbl = take num tbl 
+evalLimit (LimitOffset num offset ) tbl = take num (snd $ splitAt offset tbl)
+ 
+
 
   
 --Groups rows by their alias, combining all rows that belong to the same alias into one list.

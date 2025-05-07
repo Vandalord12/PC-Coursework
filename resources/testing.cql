@@ -1,4 +1,3 @@
-SELECT A[0]
-FROM "resources/A.csv" AS A
-ORDER ALL
-LIMIT 2 
+UPDATE "resources/A.csv" AS A
+SET A[0] = "Updated"
+WHERE A[1] = 22
