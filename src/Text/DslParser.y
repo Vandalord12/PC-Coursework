@@ -19,19 +19,13 @@ ORDER          {TokenOrder _}
 BY             {TokenBy _}
 ASC            {TokenAsc _}
 DESC           {TokenDesc _}
-GROUP          {TokenGroup _}
-HAVING         {TokenHaving _}
 LIMIT          {TokenLimit _}
 OFFSET         {TokenOffset _}
 DISTINCT       {TokenDistinct _}
 ALL            {TokenAll _}
-ANY            {TokenAny _ }
 BETWEEN        {TokenBetween _}
 UNION          {TokenUnion _}
-INTERSECT      {TokenIntersect _}
-EXCEPT         {TokenExcept _}
-LEFTMERGE      {TokenLeftMerge _ }
-COALESCE       {TokenCoalEsce _}
+COALESCE       {TokenCoalesce _}
 INSERT         {TokenInsert _}
 INTO           {TokenInto _}
 VALUES         {TokenValues _}
@@ -43,19 +37,12 @@ INNER          {TokenInner _}
 LEFT           {TokenLeft _}
 RIGHT          {TokenRight _}
 FULL           {TokenFull _}
-OUTER          {TokenOuter _}
 CROSS          {TokenCross _}
 ON             {TokenOn _ }
 AND            {TokenAnd _ }
 OR             {TokenOr _}
-NOT            {TokenNot _}
 IN             {TokenIn _}
 LIKE           {TokenLike _}
-CASE           {TokenCase _}
-WHEN           {TokenWhen _}
-THEN           {TokenThen _}
-ELSE           {TokenElse _}
-END            {TokenEnd _}
 AS              {TokenAs _}
 -- Essential arthimitic Operators ------
 "+"            {TokenPlus _}
@@ -211,7 +198,6 @@ Condition:
     
 
 
-
 ValueList: 
     Value { [$1] } 
     | Value ',' ValueList { $1 : $3 }
@@ -223,8 +209,8 @@ Value:
     | Identifier { ValIdent $1 }
 
 RowList
-  : "(" ValueList ")"                         { [$2] }
-  | "(" ValueList ")" ',' RowList            { $2 : $5 }
+  : "(" ValueList ")"  { [$2] }
+  | "(" ValueList ")" ',' RowList { $2 : $5 }
 
 
 
@@ -244,7 +230,9 @@ OptOrderBy:
     ORDER BY Column {Just (OrderByAsc $3)} -- Default value is in ascending order
     | ORDER BY Column ASC {Just (OrderByAsc $3)}
     | ORDER BY Column DESC {Just (OrderByDesc $3)}
-    | ORDER ALL {Just (OrderAll)}
+    | ORDER ALL {Just (OrderAllAsc)}
+    | ORDER ALL ASC {Just (OrderAllAsc)}
+    | ORDER ALL DESC {Just (OrderAllDesc)}
     | {Nothing}
 
 OptLimit:
@@ -340,7 +328,8 @@ data Value
 data OrderClause
     = OrderByAsc Column
     | OrderByDesc Column
-    | OrderAll
+    | OrderAllAsc
+    | OrderAllDesc
     deriving (Show, Eq)
 
 data LimitClause

@@ -559,8 +559,7 @@ evalTableName (TableAlias filePath ident) = (ident,filePath)
 
 --Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
 evalOrderBy :: OrderClause -> TableDataList -> TableDataList -> TableDataList -- needs to get tested
-evalOrderBy (OrderAll) tds outTDs | (length $ clean tds) < 1 = []
-                                  | otherwise = orderedTDL
+evalOrderBy (OrderAllAsc) tds outTDs = orderedTDL
 
   where
   allRows = convertToTable outTDs
@@ -571,6 +570,16 @@ evalOrderBy (OrderAll) tds outTDs | (length $ clean tds) < 1 = []
   resetData = map (\(info,tbl) -> (info,[])) outTDs -- gives tds with each table being cleared
   orderedTDL = remakeDataList (map (fst) ordered) outTDs resetData
 
+evalOrderBy (OrderAllDesc) tds outTDs = orderedTDL
+
+  where
+  allRows = convertToTable outTDs
+  indexedRows = zip [0..] allRows
+  ordered = sortBy (\(_, b1) (_, b2) -> compare b2 b1) indexedRows
+
+
+  resetData = map (\(info,tbl) -> (info,[])) outTDs -- gives tds with each table being cleared
+  orderedTDL = remakeDataList (map (fst) ordered) outTDs resetData
 evalOrderBy orderBy tds outTDs = orderedTDL
   where 
   (column,dir) = case orderBy of 

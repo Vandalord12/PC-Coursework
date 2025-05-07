@@ -20,19 +20,14 @@ tokens :-
   BY               { \p s -> TokenBy p }
   ASC              { \p s -> TokenAsc p }
   DESC             { \p s -> TokenDesc p }
-  GROUP            { \p s -> TokenGroup p }
-  HAVING           { \p s -> TokenHaving p }
   LIMIT            { \p s -> TokenLimit p }
   OFFSET           { \p s -> TokenOffset p }
   DISTINCT         { \p s -> TokenDistinct p }
   ALL              { \p s -> TokenAll p }
-  ANY              { \p s -> TokenAny p }
   BETWEEN          { \p s -> TokenBetween p }
   UNION            { \p s -> TokenUnion p }
-  INTERSECT        { \p s -> TokenIntersect p }
-  EXCEPT           { \p s -> TokenExcept p }
-  LEFTMERGE        { \p s -> TokenLeftMerge p }
-  COALESCE         { \p s -> TokenCoalEsce p }
+  COALESCE         { \p s -> TokenCoalesce p }
+  AS             { \p s -> TokenAs p }
   -- This chunck is responsible about Insert, Delete, Update
   INSERT          { \p s -> TokenInsert p }
   INTO            { \p s -> TokenInto p }
@@ -46,22 +41,13 @@ tokens :-
   LEFT            { \p s -> TokenLeft p }
   RIGHT           { \p s -> TokenRight p }
   FULL            { \p s -> TokenFull p }
-  OUTER           { \p s -> TokenOuter p }
   CROSS           { \p s -> TokenCross p }
   ON              { \p s -> TokenOn p }
   -- Logical Operators
   AND            { \p s -> TokenAnd p }
   OR             { \p s -> TokenOr p }
-  NOT            { \p s -> TokenNot p }
   IN             { \p s -> TokenIn p }
   LIKE           { \p s -> TokenLike p }
-  -- Conditional Expressions
-  CASE           { \p s -> TokenCase p }
-  WHEN           { \p s -> TokenWhen p }
-  THEN           { \p s -> TokenThen p }
-  ELSE           { \p s -> TokenElse p }
-  END            { \p s -> TokenEnd p }
-  AS             { \p s -> TokenAs p }
   -- Essential arthimitic Operators
   "+"            { \p s -> TokenPlus p }
   "-"            { \p s -> TokenMinus p }
@@ -106,19 +92,13 @@ data Token =
   TokenBy AlexPosn        |
   TokenAsc AlexPosn       |
   TokenDesc AlexPosn      |
-  TokenGroup AlexPosn     |
-  TokenHaving AlexPosn    |
   TokenLimit AlexPosn     |
   TokenOffset AlexPosn    |
   TokenDistinct AlexPosn  |
   TokenAll AlexPosn       |
-  TokenAny AlexPosn       |
   TokenBetween AlexPosn   |
   TokenUnion AlexPosn     |
-  TokenIntersect AlexPosn |
-  TokenExcept AlexPosn    |
-  TokenLeftMerge AlexPosn |
-  TokenCoalEsce AlexPosn  |
+  TokenCoalesce AlexPosn  |
   TokenInsert AlexPosn    |
   TokenInto AlexPosn      |
   TokenValues AlexPosn    |
@@ -130,19 +110,12 @@ data Token =
   TokenLeft AlexPosn      |
   TokenRight AlexPosn     |
   TokenFull AlexPosn      |
-  TokenOuter AlexPosn     |
   TokenCross AlexPosn    |
   TokenOn AlexPosn        |
   TokenAnd AlexPosn       |
   TokenOr AlexPosn        |
-  TokenNot AlexPosn       |
   TokenIn AlexPosn        |
   TokenLike AlexPosn      |
-  TokenCase AlexPosn      |
-  TokenWhen AlexPosn      |
-  TokenThen AlexPosn      |
-  TokenElse AlexPosn      |
-  TokenEnd AlexPosn       |
   TokenAs AlexPosn |
   TokenPlus AlexPosn      |
   TokenMinus AlexPosn     |
@@ -178,19 +151,17 @@ tokenPosn (TokenOrder (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenBy (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenAsc (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenDesc (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenGroup (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenHaving (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 tokenPosn (TokenLimit (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOffset (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenDistinct (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenAll (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenAny (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 tokenPosn (TokenBetween (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenUnion (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenIntersect (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenExcept (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenLeftMerge (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenCoalEsce (AlexPn _ l c)) = show l ++ ":" ++ show c
+
+tokenPosn (TokenCoalesce (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenAs (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 
 -- Insert/Update/Delete
@@ -207,24 +178,17 @@ tokenPosn (TokenInner (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenLeft (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenRight (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenFull (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenOuter (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 tokenPosn (TokenCross (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOn (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Logical Operators
 tokenPosn (TokenAnd (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenOr (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenNot (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 tokenPosn (TokenIn (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenLike (AlexPn _ l c)) = show l ++ ":" ++ show c
 
--- Conditional Expressions
-tokenPosn (TokenCase (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenWhen (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenThen (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenElse (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenEnd (AlexPn _ l c)) = show l ++ ":" ++ show c
-tokenPosn (TokenAs (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 -- Arithmetic Operators
 tokenPosn (TokenPlus (AlexPn _ l c)) = show l ++ ":" ++ show c
