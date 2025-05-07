@@ -45,25 +45,26 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
         Just orderc -> evalOrderBy orderc fullTable outputTable
         Nothing     -> outputTable
   
-  let limitTDL = case optLimit of
-        Just limit -> evalLimit limit orderTDL
-        Nothing    -> orderTDL
 
-  let converted = convertToTable limitTDL
+  let converted = convertToTable orderTDL
+
+  let limitTDL = case optLimit of
+        Just limit -> evalLimit limit converted
+        Nothing    -> converted
   
   let distTable = case optDist of
-        Just _  -> evalDistinct converted
-        Nothing -> converted
+        Just _  -> evalDistinct limitTDL
+        Nothing -> limitTDL
 
   finalTable <- case optUnion of
         Just sstmt -> evalUnion distTable sstmt
-        Nothing    -> return distTable
+        Nothing    -> return distTable  
 
   return finalTable
   
 
 
---evaluate the DELETE statement by Deleting the rows matching conditions and returns the remaining table.
+-- evaluate the DELETE statement by Deleting the rows matching conditions and returns the remaining table.
 evalDeleteStmt :: DeleteStmt -> IO Table
 evalDeleteStmt (Delete tableName maybeConds) = do
   let (ident, filePath) = evalTableName tableName
@@ -176,6 +177,7 @@ evalColumn col tds = evaledColumn
     ColumnByValue val ident -> replicate (length (snd $ head tds)) (evalValue val)
     ColumnByIndex ident index -> getColumn ident index tds
     ColumnCoalesce col1 col2 _ -> evalCoalesce col1 col2 tds
+    ColumnByIndexAlias ident index id -> (getColumn ident index tds)
 
 
 
@@ -541,6 +543,7 @@ extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
 extractColumn (ColumnByValue val ident) = (ident, -1)
 extractColumn (ColumnCoalesce c1 c2 ident) = (ident, -2)
+extractColumn (ColumnByIndexAlias ident index ident2) = (ident2, index)
 
 
 
@@ -614,17 +617,11 @@ remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
 
 
 -- Applies the LIMIT clause to the combined rows from all tables, then reconstructs the result into a TableDataList.
-evalLimit :: LimitClause -> TableDataList -> TableDataList -- not tested yet 
-evalLimit limitClause tablesData =
-  let
-    joinedRows = map concat (transpose (map snd tablesData))
-    limitedRows = case limitClause of
-      Limit n -> take n joinedRows
-      LimitOffset offset n -> take n (drop offset joinedRows)
-    splitRows = map (`splitRowByTables` tablesData) limitedRows
-    grouped = groupByAlias splitRows
-  in
-    rebuildTableDataList grouped tablesData
+evalLimit :: LimitClause -> Table -> Table  
+evalLimit (Limit num) tbl = take num tbl 
+evalLimit (LimitOffset num offset ) tbl = take num (snd $ splitAt offset tbl)
+ 
+
 
   
 --Groups rows by their alias, combining all rows that belong to the same alias into one list.

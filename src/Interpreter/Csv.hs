@@ -34,9 +34,17 @@ splitComma (x:xs) =
 readCSV :: FilePath -> IO Table
 readCSV path = do
   contents <- readFile path
-  let allLines = lines contents                 -- Split file into lines
-      parsed = map parseRow allLines       -- Parse each line into a Row
-  return parsed
+  let allLines = lines contents                      
+      parsed = map parseRow allLines                 
+      arities = map length parsed                    
+
+  case arities of
+    [] -> return []
+    (x:xs) ->
+      if all (== x) (x:xs)
+        then return parsed
+        else error $ "Invalid CSV: inconsistent arity. Expected " ++ show x ++ ", but got " ++ show (filter (/= x) arities)
+
 
 
 -- Converts a single Row list of Strings into a csv format 
