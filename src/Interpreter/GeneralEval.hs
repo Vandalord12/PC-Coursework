@@ -147,6 +147,7 @@ computeColumns (col:cols) tds accTDs = computeColumns cols tds newTblsData
   where
   (ident,_) = extractColumn col
   evaledCol = evalColumn col tds
+
   
   alreadyExists =  any (\((id,_),_) -> (ident == id)) tds -- checks if table already in resetData
 
@@ -174,6 +175,7 @@ evalColumn col tds = evaledColumn
     ColumnByValue val ident -> replicate (length (snd $ head tds)) (evalValue val)
     ColumnByIndex ident index -> debugExpr "byIndex: " (getColumn ident index tds)
     ColumnCoalesce col1 col2 _ -> evalCoalesce col1 col2 tds
+    ColumnByIndexAlias ident index id -> (getColumn ident index tds)
 
 
 
@@ -540,6 +542,7 @@ extractColumn :: Column -> (Ident, Int)
 extractColumn (ColumnByIndex ident index) = (ident,index)
 extractColumn (ColumnByValue val ident) = (ident, -1)
 extractColumn (ColumnCoalesce c1 c2 ident) = (ident, -2)
+extractColumn (ColumnByIndexAlias ident index ident2) = (ident2, index)
 
 
 
@@ -586,7 +589,7 @@ evalOrderBy orderBy tds outTDs = orderedTDL
     "asc" -> sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedCol
     "desc" -> sortBy (\(_, b1) (_, b2) -> compare b2 b1) indexedCol)
   
-  resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
+  resetData = map (\(info,tbl) -> (info,[])) outTDs -- gives tds with each table being cleared
   orderedTDL = remakeDataList (map (fst) ordered) outTDs resetData
 
   

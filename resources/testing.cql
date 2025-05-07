@@ -1,3 +1,4 @@
 SELECT A[0]
 FROM "resources/A.csv" AS A
-LIMIT 1 OFFSET 3
+ORDER ALL
+LIMIT 2 

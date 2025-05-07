@@ -112,7 +112,7 @@ Stmt
     | DeleteStmt { StmtDelete $1 }
     | InsertStmt { StmtInsert $1 } 
     | UpdateStmt { StmtUpdate $1 }
-    
+
 SelectStmt
     : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion { Select $2 $3 $5 $6 $7 $8 $9 $10}
 
@@ -147,6 +147,7 @@ ColumnList:
 Column:
     Value AS Identifier {ColumnByValue $1 $3}
     | Identifier "[" Integer "]" {ColumnByIndex $1 $3}
+    | Identifier "[" Integer "]" AS Identifier {ColumnByIndexAlias $1 $3 $6}
     | COALESCE "(" Column ',' Column ")" AS Identifier { ColumnCoalesce $3 $5 $8}
 
 TableName:
@@ -280,7 +281,7 @@ data Distinct = Distinct deriving (Show, Eq)
 
 data Columns = SelectAllColumns | SelectColumns [Column] deriving (Show, Eq)
 
-data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column Ident deriving (Show, Eq)
+data Column = ColumnByValue Value Ident | ColumnByIndex Ident Int |  ColumnCoalesce Column Column Ident | ColumnByIndexAlias Ident Int Ident deriving (Show, Eq)
 
 data TableName = TableAlias FilePath Ident deriving (Show, Eq)
 

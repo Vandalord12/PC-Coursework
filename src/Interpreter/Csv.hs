@@ -35,9 +35,16 @@ splitComma (x:xs) =
 readCSV :: FilePath -> IO Table
 readCSV path = do
   contents <- readFile path
-  let allLines = filter (not . all isSpace) (lines contents)  
-      parsed = map parseRow allLines
-  return parsed
+  let allLines = lines contents                      
+      parsed = map parseRow allLines                 
+      arities = map length parsed                    
+
+  case arities of
+    [] -> return []
+    (x:xs) ->
+      if all (== x) (x:xs)
+        then return parsed
+        else error $ "Invalid CSV: inconsistent arity. Expected " ++ show x ++ ", but got " ++ show (filter (/= x) arities)
 
 
 
@@ -76,4 +83,28 @@ unquote s
   | length s >= 2 && head s == '"' && last s == '"' = init (tail s)
   | otherwise = s
 
+getColumnByIndex :: FilePath -> Int -> IO [String]
+getColumnByIndex filePath index = do
+  contents <- readCSV filePath
+  let output = getColByIndex contents index
+  return output
+  where
+    -- Collates all the values in the column
+    getColByIndex :: Table -> Int -> [String]
+    getColByIndex [] _ = []
+    getColByIndex (row:rows) index = (row !! index):getColByIndex rows index
 
+-- getRowByIndex :: String -> Int -> IO [String]
+-- getRowByIndex
+-- getSpecificValue :: String -> Int -> Int -> [String]
+
+-- columnFinder :: Column -> [String]
+-- columnFiner (ColumnByIndex tbl num) = do 
+
+
+-- Will do this later
+-- checkColumnNames :: FilePath -> IO Bool
+-- checkColumnNames fileName = do
+--   contents <- readCSV fileName
+--   let firstRow = head contents
+--   case 
