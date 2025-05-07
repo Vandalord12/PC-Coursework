@@ -4,6 +4,7 @@ module Main (main) where
 import Text.Lexer (alexScanTokens)
 import Text.DslParser (dslParser)
 import Data.Maybe (isNothing, isJust)
+import System.Environment (getArgs)
 --import Interpreter.Evaluater
 import Interpreter.Csv
 import Interpreter.GeneralEval
@@ -16,7 +17,10 @@ import Text.DslParser (Stmt(StmtUpdate))
 
 main :: IO ()
 main = do
-  code <- readFile "resources/t1.cql" -- fix the task you want to test in here 
+  args <- getArgs
+  code <- case args of
+    [filename] -> readFile ("resources/" ++ filename)
+    _ -> error "Must take only one file"
   let tokens = alexScanTokens code
   let ast = dslParser tokens
   putStrLn (show tokens)
@@ -25,15 +29,19 @@ main = do
     StmtSelect sel -> do
       result <- evalSelectStmt sel
       writeToCSV "resources/output.csv" result
+      printTable result
     StmtDelete del -> do
       result <- evalDeleteStmt del
-      writeToCSV "resources/output.csv" result  
+      writeToCSV "resources/output.csv" result
+      printTable result
     StmtInsert ins -> do 
      result <- evalInsertStmt ins
-     writeToCSV "resources/output.csv" result  
+     writeToCSV "resources/output.csv" result
+     printTable result 
     StmtUpdate upd -> do 
      result <- evalUpdateStmt upd
-     writeToCSV "resources/output.csv" result  
+     writeToCSV "resources/output.csv" result
+     printTable result
 
 toIO :: a -> IO a
 toIO x = return x

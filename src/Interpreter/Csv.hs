@@ -2,8 +2,7 @@ module Interpreter.Csv where
 
 import Data.Char (isSpace)
 import System.IO (readFile)
-import Data.List (intercalate)
-import Data.List (sort)
+import Data.List
 
 
 --  A Row is set of strings.
@@ -64,7 +63,6 @@ writeToCSV :: FilePath -> [[String]] -> IO ()
 writeToCSV path rows = writeFile path (toCSV rows)
 
 
-
 -- Sort a table lexicographically
 sortTable :: Table -> Table
 sortTable = sort
@@ -75,4 +73,8 @@ unquote s
   | length s >= 2 && head s == '"' && last s == '"' = init (tail s)
   | otherwise = s
 
-
+printTable :: Table -> IO ()
+printTable rows = mapM_ putStrLn $ map (concatWithCommas) rows
+  where
+    concatWithCommas :: [String] -> String
+    concatWithCommas = concat . intersperse ","
