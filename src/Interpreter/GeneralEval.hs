@@ -401,7 +401,7 @@ getAllRows row tds = firstFullRow
   where
   firstFullRow = map (\((id,_),tbl) -> (id,accessTbl tbl row)) tds
   accessTbl :: Table -> Int -> Row
-  accessTbl tbl row | null tbl || (row >= length tbl)  = []
+  accessTbl tbl row | (row >= length tbl)  = []
                     | otherwise = tbl !! row
 
 --this gets all the rows across the tables. If the table is not large enough then pad with spaces
@@ -434,7 +434,7 @@ updateTblsData row identity (((ident,fp),tbl):tds) | ident == identity = (((iden
 
 updateAllRows :: [(Ident,[String])] -> TableDataList -> TableDataList
 updateAllRows [] acc = acc
-updateAllRows ((ident,row):rows) acc = updateAllRows rows (updateTblsData row ident acc)
+updateAllRows ((ident,row):rows) acc = updateAllRows rows (debugExpr "updatedTable: " (updateTblsData row ident acc))
 
 
 
@@ -556,19 +556,19 @@ evalTableName :: TableName -> (Ident,FilePath)
 evalTableName (TableAlias filePath ident) = (ident,filePath)
 
 
-
 --Sorts a combined table based on the ORDER BY clause and reassigns rows back to their original table aliases.
 evalOrderBy :: OrderClause -> TableDataList -> TableDataList -> TableDataList -- needs to get tested
 evalOrderBy (OrderAll) tds outTDs | (length $ clean tds) < 1 = []
                                   | otherwise = orderedTDL
 
   where
-  numOfRows = length (snd $ head tds)
-  allRows = map (\i -> getAllRows i tds) [0..(numOfRows -1)]
+  allRows = convertToTable outTDs
   indexedRows = zip [0..] allRows
-  ordered = sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedRows
-  resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
-  orderedTDL = remakeDataList (map (fst) ordered) tds resetData
+  ordered = debugExpr "orderedRows: " (sortBy (\(_, b1) (_, b2) -> compare b1 b2) indexedRows)
+
+
+  resetData = map (\(info,tbl) -> (info,[])) outTDs -- gives tds with each table being cleared
+  orderedTDL = remakeDataList (map (fst) ordered) outTDs resetData
 
 evalOrderBy orderBy tds outTDs = orderedTDL
   where 
@@ -595,7 +595,7 @@ remakeDataList :: [Int] -> TableDataList -> TableDataList -> TableDataList
 remakeDataList [] _ accTDs = accTDs
 remakeDataList (index:indexs) tds accTDs = remakeDataList indexs tds updated
   where
-  allRows = getAllRows index tds
+  allRows = debugExpr ("Rows at index " ++(show index) ++ ": ") (getAllRows index tds)
   updated = updateAllRows allRows accTDs
 
 
