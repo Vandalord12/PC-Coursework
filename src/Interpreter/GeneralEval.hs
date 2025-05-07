@@ -57,7 +57,7 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
 
   finalTable <- case optUnion of
         Just sstmt -> evalUnion distTable sstmt
-        Nothing    -> return distTable
+        Nothing    -> return distTable  
 
   return finalTable
   

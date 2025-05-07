@@ -16,7 +16,7 @@ import Text.DslParser (Stmt(StmtUpdate))
 
 main :: IO ()
 main = do
-  code <- readFile "resources/t5.cql" -- fix the task you want to test in here 
+  code <- readFile "resources/testing.cql" -- fix the task you want to test in here 
   let tokens = alexScanTokens code
   let ast = dslParser tokens
   putStrLn (show tokens)
