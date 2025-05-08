@@ -48,6 +48,7 @@ tokens :-
   OR             { \p s -> TokenOr p }
   IN             { \p s -> TokenIn p }
   LIKE           { \p s -> TokenLike p }
+  EXPORT         {\p s -> TokenExport p}
   -- Essential arthimitic Operators
   "+"            { \p s -> TokenPlus p }
   "-"            { \p s -> TokenMinus p }
@@ -116,18 +117,19 @@ data Token =
   TokenOr AlexPosn        |
   TokenIn AlexPosn        |
   TokenLike AlexPosn      |
-  TokenAs AlexPosn |
+  TokenExport AlexPosn    |
+  TokenAs AlexPosn        |
   TokenPlus AlexPosn      |
   TokenMinus AlexPosn     |
   TokenMultiply AlexPosn  |
   TokenComma    AlexPosn  |
   TokenDivide AlexPosn    |
   TokenModulo AlexPosn    |
-  TokenDot AlexPosn |
+  TokenDot AlexPosn       |
   TokenEquals AlexPosn    |
   TokenNotEquals AlexPosn |
   TokenLessThan AlexPosn  |
-  TokenGreaterThan AlexPosn |
+  TokenGreaterThan AlexPosn|
   TokenLessThanEq AlexPosn |
   TokenGreaterThanEq AlexPosn |
   TokenLParen AlexPosn    |
@@ -188,6 +190,8 @@ tokenPosn (TokenOr (AlexPn _ l c)) = show l ++ ":" ++ show c
 
 tokenPosn (TokenIn (AlexPn _ l c)) = show l ++ ":" ++ show c
 tokenPosn (TokenLike (AlexPn _ l c)) = show l ++ ":" ++ show c
+tokenPosn (TokenExport (AlexPn _ l c)) = show l ++ ":" ++ show c
+
 
 
 -- Arithmetic Operators

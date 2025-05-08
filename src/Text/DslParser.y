@@ -43,6 +43,7 @@ AND            {TokenAnd _ }
 OR             {TokenOr _}
 IN             {TokenIn _}
 LIKE           {TokenLike _}
+EXPORT         {TokenExport _}
 AS              {TokenAs _}
 -- Essential arthimitic Operators ------
 "+"            {TokenPlus _}
@@ -104,7 +105,7 @@ Stmt
     | UpdateStmt { StmtUpdate $1 }
 
 SelectStmt
-    : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion { Select $2 $3 $5 $6 $7 $8 $9 $10}
+    : SELECT OptDistinct Columns FROM TableName OptJoins OptWhere OptOrderBy OptLimit OptUnion OptExport  { Select $2 $3 $5 $6 $7 $8 $9 $10 $11}
 
 DeleteStmt
     : DELETE FROM TableName OptWhere { Delete $3 $4}
@@ -116,6 +117,9 @@ UpdateStmt
   : UPDATE FilePath AS Identifier SET Assignments WHERE ConditionList { Update $2 $4 $6 $8 }
 
 
+OptExport
+    : EXPORT FilePath { Just $2 }
+    |                  { Nothing }
 
 
 
@@ -262,7 +266,7 @@ data Stmt
   | StmtUpdate UpdateStmt
   deriving (Show, Eq)
 
-data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe ConditionList) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) deriving (Show, Eq)
+data SelectStmt = Select (Maybe Distinct) Columns TableName (Maybe [JoinClause]) (Maybe ConditionList) (Maybe OrderClause) (Maybe LimitClause) (Maybe SelectStmt) (Maybe FilePath)  deriving (Show, Eq)
 
 data DeleteStmt = Delete TableName (Maybe ConditionList) deriving (Show, Eq)
 

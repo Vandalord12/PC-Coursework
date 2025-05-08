@@ -60,6 +60,10 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
         Just sstmt -> evalUnion distTable sstmt
         Nothing    -> return distTable  
 
+  case optExport of
+    Just outPath -> writeCSV outPath finalTable
+    Nothing      -> return ()
+
   return finalTable
   
 

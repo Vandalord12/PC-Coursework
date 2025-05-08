@@ -6,6 +6,3 @@ SELECT
 FROM "P.csv" AS P
 JOIN "Q.csv" AS Q ON P[0] = Q[0]
 ORDER ALL
-
-
-
