@@ -251,7 +251,9 @@ OptUnion:
 {
 
 parseError :: [Token] -> a
-parseError = error "oops something went wrong"
+parseError [] = error "Parse error: unexpected end of input"
+parseError (tok:_) =
+  error $ "Parse error at " ++ tokenPosn tok ++ ": unexpected token " ++ show tok
 
 type Ident = String
 

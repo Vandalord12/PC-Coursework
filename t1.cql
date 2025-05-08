@@ -1,5 +1,0 @@
-SELECT *
-FROM "A.csv" AS A
-CROSS JOIN "B.csv" AS B ALL
-ORDER ALL 
-

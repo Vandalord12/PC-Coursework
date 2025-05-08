@@ -1,4 +1,0 @@
-SELECT A[0], A[1]
-FROM "A.csv" AS A 
-WHERE A[1] != ""
-ORDER ALL

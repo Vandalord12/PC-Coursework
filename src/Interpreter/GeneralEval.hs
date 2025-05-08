@@ -158,10 +158,6 @@ computeColumns (col:cols) tds accTDs = computeColumns cols tds newTblsData
     True -> updateTblsData evaledCol ident accTDs
 
 
--- transposeTblData :: Ident -> TableDataList -> TableDataList
--- transposeTblData _ [] = []
--- transposeTblData identity (((ident,fp),tbl):tds) | ident == identity = (((ident,fp),transpose tbl):tds)
---                                                    | otherwise = ((ident,fp),tbl):transposeTblData identity tds
 
 evalCoalesce :: Column -> Column -> TableDataList -> [String]
 evalCoalesce c1 c2 tds =
@@ -184,9 +180,6 @@ evalColumn col tds = evaledColumn
 
 
 
-
-
-    
 
 
 
