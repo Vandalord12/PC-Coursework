@@ -1,0 +1,4 @@
+SELECT *
+FROM "B.csv" AS B
+CROSS JOIN "A.csv" AS A ALL
+CROSS JOIN "C.csv" AS C ALL
