@@ -197,7 +197,7 @@ evalDistinct tbl = nub tbl
 evalUnion :: Table -> SelectStmt -> IO Table
 evalUnion tbl stmt = do
   evaledSelect <- evalSelectStmt stmt
-  return (combineTables (tbl : evaledSelect : []))
+  return $ transpose (combineTables (tbl : evaledSelect : []))
 
 
 
@@ -306,7 +306,7 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
     indexRCol = debugExpr "indexRCol: " (zip [0..] evaledRightColumn) -- index the values of the column
 
   
-    resetData = map (\(info,tbl) -> (info,[])) tds -- gives tds with each table being cleared
+    resetData = updateTblData rId [] (updateTblData lId [] tds)-- gives tds with each table being cleared
 
 
 
