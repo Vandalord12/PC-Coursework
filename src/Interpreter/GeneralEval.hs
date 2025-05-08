@@ -39,7 +39,7 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
   
   let (fullTable,outputTable) = evalColumns cols condsTDL
   
-  putStrLn ("Output columns:\n" ++ (show outputTable) ++ "\n")
+  --putStrLn ("Output columns:\n" ++ (show outputTable) ++ "\n")
 
   let orderTDL = case optOrd of
         Just orderc -> evalOrderBy orderc fullTable outputTable
@@ -229,7 +229,7 @@ evalJoins :: [JoinClause] -> TableDataList -> IO TableDataList
 evalJoins [] tds = return tds
 evalJoins (j:js) tds = do 
   evaledJoin <- evalJoin j tds
-  putStrLn ("Table list after join:\n" ++ (show evaledJoin) ++ "\n")
+  --putStrLn ("Table list after join:\n" ++ (show evaledJoin) ++ "\n")
   evalJoins js (evaledJoin)
 
 
@@ -243,6 +243,7 @@ extractJoin jc = (joinType, tblName, onCond)
     RightJoin t c -> ("Right", t, c)
     FullJoin t c -> ("Full", t, c)
     CrossJoin t c -> ("Cross", t, c) -- This needs work
+    CrossJoinAll (TableAlias fp ident) -> ("CrossAll", (TableAlias fp ident), (OnColEquals (ColumnByIndex ident 0) (ColumnByIndex ident 0)))
   
 
 -- Evaluates the join clause by taking in the current tables and changing them
@@ -262,9 +263,9 @@ evalJoin jc tds = do
   let (condFunc, (col1, col2)) = evalOnCondition onCond
   let (leftCol, rightCol) = identifyLRTbls tableIdent col1 col2
 
-  putStrLn ("Columns loaded:\n" ++ (show (leftCol, rightCol)) ++ "\n")
-  putStrLn("Table list before join:\n" ++ (show newTblsData)  ++ "\n")
-  return $ helperJoin newTblsData joinType tableIdent condFunc leftCol rightCol
+  --putStrLn ("Columns loaded:\n" ++ (show (leftCol, rightCol)) ++ "\n")
+  --putStrLn("Table list before join:\n" ++ (show newTblsData)  ++ "\n")
+  return $ helperJoin newTblsData joinType condFunc leftCol rightCol
 
 
 identifyLRTbls :: Ident -> Column -> Column -> (Column,Column)
@@ -284,14 +285,15 @@ identifyLRTbls ident col1 col2 = (left,right)
 
 
 -- Continues evaluating the join
-helperJoin :: TableDataList -> String -> Ident -> (String -> String -> Bool) -> Column -> Column -> TableDataList
-helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinType of
+helperJoin :: TableDataList -> String -> (String -> String -> Bool) -> Column -> Column -> TableDataList
+helperJoin tds joinType onCondFunc leftCol rightCol = (case joinType of
   -- For each different join type do the relavent function
   "Inner" -> makeTableDataList lId rId (innerJoin indexLCol indexRCol onCondFunc) tds resetData
   "Left" -> makeTableDataList lId rId (leftJoin indexLCol indexRCol onCondFunc) tds resetData
   "Right" -> makeTableDataList rId lId (rightJoin indexLCol indexRCol onCondFunc) tds resetData
   "Full" -> makeTableDataList lId rId (fullJoin indexLCol indexRCol onCondFunc) tds resetData
-  "Cross" -> makeTableDataList lId rId (crossJoin indexLCol indexRCol) tds resetData)
+  "Cross" -> makeTableDataList lId rId (crossJoin indexLCol indexRCol) tds resetData
+  "CrossAll" -> crossAllTables lId tds)
 
   where
     (lId,evaledLeftColumn) = case (extractColumn leftCol) of -- get the left/first column in the on condition 
@@ -302,13 +304,28 @@ helperJoin tds joinType joinTblIdent onCondFunc leftCol rightCol = (case joinTyp
       (ident, -1) -> error ("Cannot join on a value based column of identity: " ++ ident) 
       (identity, colIndex) ->  (identity, getColumn identity colIndex tds) -- get the table containing the colum and the column
 
-    indexLCol = debugExpr "indexLCol: " (zip [0..] evaledLeftColumn) -- index the values of the column
-    indexRCol = debugExpr "indexRCol: " (zip [0..] evaledRightColumn) -- index the values of the column
+    indexLCol = zip [0..] evaledLeftColumn -- index the values of the column
+    indexRCol = zip [0..] evaledRightColumn -- index the values of the column
 
   
-    resetData = updateTblData rId [] (updateTblData lId [] tds)-- gives tds with each table being cleared
+resetData = updateTblData rId [] (updateTblData lId [] tds) -- gives tds with the used tables being cleared
 
 
+
+crossAllTables :: Ident -> TableDataList -> TableDataList
+crossAllTables ident tds = recurseCrosses ident ogtbl tds otherTbls
+  where
+  otherTbls = filter (\((id,fp),tbl) -> id /= ident) tds
+  ogtbl = case getTableById ident tds of
+    Just t -> t
+    Nothing -> []
+  
+ 
+
+recurseCrosses :: Ident -> Table -> TableDataList -> TableDataList -> TableDataList
+recurseCrosses _ _ tds [] = tds
+recurseCrosses ident ogtbl tds (((id,_),_):otds) = recurseCrosses ident ogtbl (helperJoin (updateTblData ident ogtbl tds) "Cross" (==) (ColumnByIndex ident 0) (ColumnByIndex id 0)) otds
+ 
 
 
 updateTblData :: Ident -> Table -> TableDataList -> TableDataList
@@ -360,7 +377,7 @@ rightJoin _ [] _ = []
 rightJoin ls ((rightI,rightVal):rs) f = (map (\x -> (rightI, x)) (fullCheck rightVal ls f)) ++  (rightJoin ls rs f)
 -- Computes which rows in first csv matchs to which rows in the second csv, and gives back their indexes in pairs
 fullJoin :: [(Int, String)] -> [(Int, String)] -> (String -> String -> Bool) -> [(Int,Int)]
-fullJoin ls rs f = nub ((debugExpr "leftJoin: " (leftJoin ls rs f)) ++ (debugExpr "rightJoin :" (map (\(r,l) -> (l,r)) (rightJoin ls rs f))))
+fullJoin ls rs f = nub $ (leftJoin ls rs f) ++ ((map (\(r,l) -> (l,r)) (rightJoin ls rs f)))
 
 crossJoin :: [(Int, String)] -> [(Int, String)] -> [(Int,Int)]
 crossJoin ls rs = [(leftI,rightI) | (leftI,_) <- ls, (rightI,_) <- rs]
@@ -373,17 +390,17 @@ makeTableDataList leftId rightId ((li,ri):as) tds accTbls = makeTableDataList le
   
   
   where
-  lrow = debugExpr "\nlrow:\n" (case li of 
+  lrow = case li of 
     (-1) -> replicate (getTableArity leftId tds) "" -- if the index (li) is invalid fill the space with empty strings
     (l) -> case (getTableById leftId tds) of
       Just tbl -> (tbl !! li) -- gets the row of index li from the current table data list
-      Nothing -> [])
+      Nothing -> []
 
-  rrow = debugExpr "\nrrow:\n" (case ri of -- gets the row of index ri from the current table data list 
+  rrow = case ri of -- gets the row of index ri from the current table data list 
     (-1) -> replicate (getTableArity rightId tds) "" -- if the index (ri) is invalid fill the space with empty strings
     (r) -> case (getTableById rightId tds) of 
       Just tbl -> (tbl !! r)
-      Nothing -> [])
+      Nothing -> []
 
   updated = updateTblsData lrow leftId (updateTblsData rrow rightId accTbls) -- update the new table data list
 
@@ -420,8 +437,6 @@ getTableDataById :: Ident -> TableDataList -> TableData
 getTableDataById ident [] = error ("Table Identifier: " ++ ident ++ " does not exist")
 getTableDataById ident (((identity,fp),tbl):tds) | ident == identity = ((identity,fp),tbl)
                                      | otherwise = getTableDataById ident tds
-
-
 
 
 

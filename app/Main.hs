@@ -19,28 +19,28 @@ main :: IO ()
 main = do
   args <- getArgs
   code <- case args of
-    [filename] -> readFile ("resources/" ++ filename)
+    [filename] -> readFile filename
     _ -> error "Must take only one file"
   let tokens = alexScanTokens code
   let ast = dslParser tokens
-  putStrLn (show tokens)
-  putStrLn (show ast)
+  --putStrLn (show tokens)
+  --putStrLn (show ast)
   case ast of
     StmtSelect sel -> do
       result <- evalSelectStmt sel
-      writeToCSV "resources/output.csv" result
+      --writeToCSV "output.csv" result
       printTable result
     StmtDelete del -> do
       result <- evalDeleteStmt del
-      writeToCSV "resources/output.csv" result
+      --writeToCSV "output.csv" result
       printTable result
     StmtInsert ins -> do 
      result <- evalInsertStmt ins
-     writeToCSV "resources/output.csv" result
+     --writeToCSV "output.csv" result
      printTable result 
     StmtUpdate upd -> do 
      result <- evalUpdateStmt upd
-     writeToCSV "resources/output.csv" result
+     --writeToCSV "output.csv" result
      printTable result
 
 toIO :: a -> IO a

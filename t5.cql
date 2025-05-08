@@ -3,8 +3,8 @@ SELECT
   COALESCE(P[1], Q[1]) AS c2,
   COALESCE(P[2], Q[2]) AS c3,
   COALESCE(P[3], Q[3]) AS c4
-FROM "resources/P.csv" AS P
-JOIN "resources/Q.csv" AS Q ON P[0] = Q[0]
+FROM "P.csv" AS P
+JOIN "Q.csv" AS Q ON P[0] = Q[0]
 ORDER ALL
 
 
