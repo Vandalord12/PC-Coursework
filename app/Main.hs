@@ -19,7 +19,7 @@ main :: IO ()
 main = do
   args <- getArgs
   code <- case args of
-    [filename] -> readFile filename
+    [filename] -> readFile ("programs/" ++ filename)
     _ -> error "Must take only one file"
   let tokens = alexScanTokens code
   let ast = dslParser tokens

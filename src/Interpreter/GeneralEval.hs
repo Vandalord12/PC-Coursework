@@ -36,16 +36,12 @@ evalSelectStmt (Select optDist cols tbl optJcs optConds optOrd optLimit optUnion
         Just conds -> evalConditions joinsTDL conds
         Nothing    -> joinsTDL
 
-  
   let (fullTable,outputTable) = evalColumns cols condsTDL
-  
-  --putStrLn ("Output columns:\n" ++ (show outputTable) ++ "\n")
 
   let orderTDL = case optOrd of
         Just orderc -> evalOrderBy orderc fullTable outputTable
         Nothing     -> outputTable
   
-
   let converted = convertToTable orderTDL
 
   let limitTDL = case optLimit of
@@ -193,9 +189,6 @@ evalUnion tbl stmt = do
   return $ transpose (combineTables (tbl : evaledSelect : []))
 
 
-
-
-
 convertToTable :: TableDataList -> Table
 convertToTable tds = transpose $ combineTables tbls
   where
@@ -205,9 +198,6 @@ convertToTable tds = transpose $ combineTables tbls
 combineTables :: [Table] -> Table
 combineTables [] = []
 combineTables (t:ts) = (transpose t) ++ combineTables ts
-
-
-
 
 
 
@@ -256,8 +246,7 @@ evalJoin jc tds = do
   let (condFunc, (col1, col2)) = evalOnCondition onCond
   let (leftCol, rightCol) = identifyLRTbls tableIdent col1 col2
 
-  --putStrLn ("Columns loaded:\n" ++ (show (leftCol, rightCol)) ++ "\n")
-  --putStrLn("Table list before join:\n" ++ (show newTblsData)  ++ "\n")
+
   return $ helperJoin newTblsData joinType condFunc leftCol rightCol
 
 
@@ -413,7 +402,6 @@ getAllRows row tds = firstFullRow
   accessTbl tbl row | (row >= length tbl)  = []
                     | otherwise = tbl !! row
 
---this gets all the rows across the tables. If the table is not large enough then pad with spaces
 
 
 getColumn :: Ident -> Int -> TableDataList -> [String]
@@ -455,8 +443,6 @@ evalCondOnRow (TerminalCondition cond) row tds = rowSatisfies row cond tds
 
 -- Evaluates all the conditions how it works:
 -- Filters rows from the Cartesian product that satisfy all conditions.
-  -- Filters rows from the Cartesian product that satisfy all conditions.
-
 evalConditions :: TableDataList -> ConditionList -> TableDataList
 evalConditions tablesData conds =
   let
@@ -467,7 +453,6 @@ evalConditions tablesData conds =
     joinedRows = map concat (transpose (map snd sortedTables))
 
     -- Filter based on WHERE
-    --filteredRows = filter (\row -> all (\cond -> rowSatisfies row cond sortedTables) conds) joinedRows
     filteredRows = filter (\row -> evalCondOnRow conds row sortedTables) joinedRows
     -- Re-split by alias
     splitRows = map (`splitRowByTables` sortedTables) filteredRows
@@ -476,7 +461,7 @@ evalConditions tablesData conds =
     rebuildTableDataList grouped sortedTables
 
 
--- if 
+
 
 
 

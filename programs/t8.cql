@@ -1,0 +1,8 @@
+SELECT
+  COALESCE(Q[0], P[0]) AS r1,
+  COALESCE(Q[1], P[1]) AS r2,
+  COALESCE(Q[2], P[2]) AS r3,
+  Q[3] AS r4
+FROM "P.csv" AS P
+JOIN "Q.csv" AS Q ON P[3] = Q[3]
+ORDER ALL

@@ -1,0 +1,2 @@
+SELECT *
+FROM "F.csv" AS t1

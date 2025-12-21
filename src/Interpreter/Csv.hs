@@ -33,7 +33,7 @@ splitComma (x:xs) =
 -- read a csv file and return a Table consist list of rows.
 readCSV :: FilePath -> IO Table
 readCSV path = do
-  contents <- readFile path
+  contents <- readFile ("csvs/" ++ path)
   let allLines = lines contents                      
       parsed = map parseRow allLines                 
       arities = map length parsed                    

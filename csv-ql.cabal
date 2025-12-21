@@ -58,19 +58,3 @@ executable cql
     , base >=4.7 && <5
     , csv-ql
   default-language: Haskell2010
-
-test-suite example-name-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_csv_ql
-  autogen-modules:
-      Paths_csv_ql
-  hs-source-dirs:
-      test
-  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      array
-    , base >=4.7 && <5
-    , csv-ql
-  default-language: Haskell2010
